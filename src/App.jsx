@@ -1,12 +1,18 @@
 import React, { useState, useEffect } from 'react';
 
 // ==========================================
-// CONFIGURACIÓN GLOBAL (9 MESAS Y HORARIOS)
+// CONFIGURACIÓN DE LAS 9 MESAS
 // ==========================================
 const MESAS_RESTAURANTE = [
-  "Mesa 1", "Mesa 2", "Mesa 3",
-  "Mesa 4", "Mesa 5", "Mesa 6",
-  "Mesa 7", "Mesa 8", "Mesa 9"
+  { id: "Mesa 1", nombre: "Mesa 1", cap: "2p" },
+  { id: "Mesa 2", nombre: "Mesa 2", cap: "2p" },
+  { id: "Mesa 3", nombre: "Mesa 3", cap: "2p" },
+  { id: "Mesa 4", nombre: "Mesa 4", cap: "4p" },
+  { id: "Mesa 5", nombre: "Mesa 5", cap: "4p" },
+  { id: "Mesa 6", nombre: "Mesa 6", cap: "4p" },
+  { id: "Mesa 7", nombre: "Mesa 7", cap: "4p" },
+  { id: "Mesa 8", nombre: "Mesa 8", cap: "6p" },
+  { id: "Mesa 9", nombre: "Mesa 9", cap: "6p" }
 ];
 
 const HORARIOS_DISPONIBLES = ["13:00", "14:00", "15:00", "19:00", "20:00", "21:00"];
@@ -99,7 +105,7 @@ const ESPECIALIDADES = [
 ];
 
 // ==========================================
-// COMPONENTE 1: NAVBAR PÚBLICO
+// COMPONENTE 1: NAVBAR
 // ==========================================
 function Navbar({ vistaActual, setVistaActual, totalReservas, adminAutenticado }) {
   const [menuMovilAbierto, setMenuMovilAbierto] = useState(false);
@@ -198,25 +204,162 @@ function PlatoCard({ plato, onReservarClick }) {
 }
 
 // ==========================================
-// COMPONENTE 3: FORMULARIO CLIENTE (9 MESAS + BLOQUEOS)
+// COMPONENTE 3: MODAL DE PAGO (CAPTURA 04)
+// ==========================================
+function ModalPagoGarantia({ datosPreReserva, onConfirmarPago, onCerrar }) {
+  const [medioPago, setMedioPago] = useState("Yape");
+  const [nroOperacion, setNroOperacion] = useState("04587123");
+  const [comprobanteAdjunto, setComprobanteAdjunto] = useState(null);
+  const [aceptaValidacion, setAceptaValidacion] = useState(false);
+
+  const manejarArchivo = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setComprobanteAdjunto(URL.createObjectURL(e.target.files[0]));
+    }
+  };
+
+  const ejecutarPago = (e) => {
+    e.preventDefault();
+    if (!aceptaValidacion) {
+      alert("Por favor confirma que entiendes que la reserva queda pendiente de validación.");
+      return;
+    }
+    onConfirmarPago({
+      medioPago,
+      nroOperacion,
+      montoGarantia: 100,
+      comprobanteUrl: comprobanteAdjunto || "comprobante_simulado.jpg"
+    });
+  };
+
+  return (
+    <div className="pago-modal-backdrop">
+      <div className="pago-modal-window">
+        <div className="pago-modal-header">
+          <h3>Asegura tu reserva</h3>
+          <button onClick={onCerrar} className="btn-cerrar-modal">✕</button>
+        </div>
+
+        <div className="pago-box-garantia">
+          <span className="pago-label-garantia">GARANTÍA DE RESERVA</span>
+          <span className="pago-monto-garantia">S/ 100.00</span>
+        </div>
+
+        <p className="pago-desc-texto">
+          Al llegar y consumir, estos S/ 100 se descontarán del total de tu cuenta. Este pago solo sirve para asegurar que la reserva es real. No es un cobro adicional.
+        </p>
+
+        <div className="pago-resumen-pill">
+          {datosPreReserva.fecha} · {datosPreReserva.hora} hrs · {datosPreReserva.mesa} · {datosPreReserva.personas} · {datosPreReserva.nombre}
+        </div>
+
+        <div className="pago-grid-cuentas">
+          <div className="pago-cuenta-item">
+            <span className="cuenta-label">YAPE</span>
+            <strong className="cuenta-valor">987 654 321</strong>
+          </div>
+
+          <div className="pago-cuenta-item">
+            <span className="cuenta-label">TRANSFERENCIA BCP</span>
+            <strong className="cuenta-valor">191-00000000-0-00</strong>
+            <small className="cuenta-sub">CCI 002-191-000000000000-00</small>
+          </div>
+
+          <div className="pago-cuenta-item">
+            <span className="cuenta-label">TITULAR</span>
+            <strong className="cuenta-valor">Inka Sabores S.A.C.</strong>
+          </div>
+        </div>
+
+        <span className="pago-nota-ejemplo">* Datos de cuenta de ejemplo.</span>
+
+        <form onSubmit={ejecutarPago}>
+          <div className="pago-form-row">
+            <div className="pago-input-col">
+              <label>Medio de pago</label>
+              <select value={medioPago} onChange={(e) => setMedioPago(e.target.value)}>
+                <option value="Yape">Yape</option>
+                <option value="Transferencia BCP">Transferencia BCP</option>
+                <option value="Plin">Plin</option>
+              </select>
+            </div>
+
+            <div className="pago-input-col">
+              <label>N° de operación</label>
+              <input
+                type="text"
+                value={nroOperacion}
+                onChange={(e) => setNroOperacion(e.target.value)}
+                placeholder="04587123"
+                required
+              />
+            </div>
+          </div>
+
+          <div className="pago-upload-container">
+            <label className="pago-upload-box">
+              {comprobanteAdjunto ? (
+                <img src={comprobanteAdjunto} alt="Voucher" className="pago-voucher-preview" />
+              ) : (
+                <div className="pago-upload-placeholder">
+                  <div className="pago-icon-cross"></div>
+                  <span>Vista previa del comprobante</span>
+                  <small style={{ color: "#777", display: "block", marginTop: "4px" }}>
+                    (Haz clic para adjuntar comprobante)
+                  </small>
+                </div>
+              )}
+              <input type="file" accept="image/*" onChange={manejarArchivo} style={{ display: "none" }} />
+            </label>
+          </div>
+
+          <label className="pago-checkbox-row">
+            <input
+              type="checkbox"
+              checked={aceptaValidacion}
+              onChange={(e) => setAceptaValidacion(e.target.checked)}
+              required
+            />
+            <span>
+              Entiendo que mi reserva quedará pendiente hasta que el restaurante valide el pago y me envíe un correo de confirmación.
+            </span>
+          </label>
+
+          <div className="pago-botones-footer">
+            <button type="submit" className="btn-pago-confirmar">
+              Enviar comprobante y reservar
+            </button>
+            <button type="button" onClick={onCerrar} className="btn-pago-cancelar">
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ==========================================
+// COMPONENTE 4: FORMULARIO CLIENTE (CAPTURA 05)
 // ==========================================
 function SeccionReserva({ reservas, mesasBloqueadas, agregarReserva }) {
   const hoy = new Date().toISOString().split("T")[0];
 
   const [fecha, setFecha] = useState(hoy);
-  const [hora, setHora] = useState("13:00");
-  const [personas, setPersonas] = useState("2 personas");
-  const [mesaSeleccionada, setMesaSeleccionada] = useState("Mesa 1");
-  const [nombre, setNombre] = useState("");
-  const [telefono, setTelefono] = useState("");
-  const [email, setEmail] = useState("");
+  const [hora, setHora] = useState("19:00");
+  const [personas, setPersonas] = useState("4 personas");
+  const [mesaSeleccionada, setMesaSeleccionada] = useState("Mesa 5");
+  const [nombre, setNombre] = useState("María García");
+  const [telefono, setTelefono] = useState("+51 999 888 777");
+  const [email, setEmail] = useState("maria@correo.com");
   const [notas, setNotas] = useState("");
   const [aceptaPoliticas, setAceptaPoliticas] = useState(false);
 
   const [mesasNoDisponibles, setMesasNoDisponibles] = useState([]);
-  const [mensajeConfirmacion, setMensajeConfirmacion] = useState(null);
+  const [modalPagoVisible, setModalPagoVisible] = useState(false);
+  const [datosPreReserva, setDatosPreReserva] = useState(null);
+  const [bannerPendiente, setBannerPendiente] = useState(null);
 
-  // Sincronización en tiempo real: mesas ocupadas en esa hora O bloqueadas por incidente todo el día
   useEffect(() => {
     const bloqueadasTodoElDia = mesasBloqueadas
       .filter((b) => b.fecha === fecha)
@@ -230,20 +373,19 @@ function SeccionReserva({ reservas, mesasBloqueadas, agregarReserva }) {
     setMesasNoDisponibles(todasInhabilitadas);
 
     if (todasInhabilitadas.includes(mesaSeleccionada)) {
-      const primeraLibre = MESAS_RESTAURANTE.find((m) => !todasInhabilitadas.includes(m));
-      setMesaSeleccionada(primeraLibre || "");
+      const primeraLibre = MESAS_RESTAURANTE.find((m) => !todasInhabilitadas.includes(m.id));
+      setMesaSeleccionada(primeraLibre ? primeraLibre.id : "");
     }
   }, [fecha, hora, reservas, mesasBloqueadas, mesaSeleccionada]);
 
-  const manejarEnvio = (e) => {
+  const iniciarProcesoReserva = (e) => {
     e.preventDefault();
     if (!mesaSeleccionada) {
-      setMensajeConfirmacion({ tipo: "error", texto: "No hay mesas disponibles en este turno. Por favor selecciona otra hora o fecha." });
+      alert("No hay mesas disponibles en este turno. Por favor selecciona otra hora o fecha.");
       return;
     }
 
-    const nuevaReserva = {
-      id: Date.now(),
+    setDatosPreReserva({
       fecha,
       hora,
       personas,
@@ -251,22 +393,38 @@ function SeccionReserva({ reservas, mesasBloqueadas, agregarReserva }) {
       nombre,
       telefono,
       email,
-      notas,
-      estado: "Confirmada"
+      notas
+    });
+    setModalPagoVisible(true);
+  };
+
+  const finalizarReservaConPago = (datosPago) => {
+    const nuevaReserva = {
+      id: Date.now(),
+      ...datosPreReserva,
+      ...datosPago,
+      estado: "Pendiente de validación"
     };
 
     agregarReserva(nuevaReserva);
-    setMensajeConfirmacion({
-      tipo: "exito",
-      texto: `¡Reserva confirmada para ${nombre}! Te esperamos el ${fecha} a las ${hora} en la ${mesaSeleccionada}.`
+    setModalPagoVisible(false);
+
+    setBannerPendiente({
+      nombre: datosPreReserva.nombre,
+      fecha: datosPreReserva.fecha,
+      hora: datosPreReserva.hora,
+      mesa: datosPreReserva.mesa,
+      monto: datosPago.montoGarantia,
+      email: datosPreReserva.email
     });
 
-    setNombre("");
-    setTelefono("");
-    setEmail("");
-    setNotas("");
-    setAceptaPoliticas(false);
+    window.scrollTo({
+      top: document.getElementById("reserva").offsetTop - 40,
+      behavior: "smooth"
+    });
   };
+
+  const mesasLibresCount = MESAS_RESTAURANTE.length - mesasNoDisponibles.length;
 
   return (
     <section className="section section-dark" id="reserva">
@@ -301,13 +459,13 @@ function SeccionReserva({ reservas, mesasBloqueadas, agregarReserva }) {
               Completa los datos y selecciona una mesa disponible en tiempo real.
             </p>
 
-            {mensajeConfirmacion && (
-              <div className={`alerta-reserva ${mensajeConfirmacion.tipo}`}>
-                {mensajeConfirmacion.texto}
+            {bannerPendiente && (
+              <div className="alerta-pendiente-box">
+                ¡Gracias, {bannerPendiente.nombre}! Recibimos tu reserva para el {bannerPendiente.fecha} a las {bannerPendiente.hora} en la {bannerPendiente.mesa} y tu comprobante de S/ {bannerPendiente.monto}. Tu reserva queda pendiente de validación: te enviaremos la confirmación a {bannerPendiente.email}.
               </div>
             )}
 
-            <form onSubmit={manejarEnvio} className="inka-form">
+            <form onSubmit={iniciarProcesoReserva} className="inka-form">
               <div className="form-row-3">
                 <div className="form-group">
                   <label>Fecha</label>
@@ -340,28 +498,26 @@ function SeccionReserva({ reservas, mesasBloqueadas, agregarReserva }) {
                 </div>
               </div>
 
-              {/* Selector de las 9 Mesas (Grilla 3x3) */}
               <div className="form-group" style={{ marginBottom: "18px" }}>
                 <label>
-                  Selecciona tu Mesa ({MESAS_RESTAURANTE.length - mesasNoDisponibles.length} disponibles de 9 a las {hora})
+                  Selecciona tu Mesa ({mesasLibresCount} disponibles para {personas} a las {hora})
                 </label>
                 <div className="mesas-grid-selector">
-                  {MESAS_RESTAURANTE.map((mesa) => {
-                    const estaBloqueadaPorIncidente = mesasBloqueadas.some((b) => b.fecha === fecha && b.mesa === mesa);
-                    const estaOcupadaPorReserva = reservas.some((r) => r.fecha === fecha && r.hora === hora && r.mesa === mesa && r.estado !== "Cancelada");
+                  {MESAS_RESTAURANTE.map((m) => {
+                    const estaBloqueadaPorIncidente = mesasBloqueadas.some((b) => b.fecha === fecha && b.mesa === m.id);
+                    const estaOcupadaPorReserva = reservas.some((r) => r.fecha === fecha && r.hora === hora && r.mesa === m.id && r.estado !== "Cancelada");
                     const noDisponible = estaBloqueadaPorIncidente || estaOcupadaPorReserva;
-                    const estaSeleccionada = mesaSeleccionada === mesa;
+                    const estaSeleccionada = mesaSeleccionada === m.id;
 
                     return (
                       <button
                         type="button"
-                        key={mesa}
+                        key={m.id}
                         disabled={noDisponible}
-                        onClick={() => setMesaSeleccionada(mesa)}
+                        onClick={() => setMesaSeleccionada(m.id)}
                         className={`mesa-chip ${noDisponible ? "ocupada" : ""} ${estaSeleccionada ? "seleccionada" : ""}`}
-                        title={estaBloqueadaPorIncidente ? "Mesa fuera de servicio temporalmente" : ""}
                       >
-                        {mesa} {estaBloqueadaPorIncidente ? "(Fuera de servicio)" : estaOcupadaPorReserva ? "(Ocupada)" : "✓"}
+                        {m.nombre} · {m.cap} {estaBloqueadaPorIncidente ? "(Fuera de servicio)" : estaOcupadaPorReserva ? "(Ocupada)" : "✓"}
                       </button>
                     );
                   })}
@@ -433,19 +589,27 @@ function SeccionReserva({ reservas, mesasBloqueadas, agregarReserva }) {
               </button>
 
               <div className="form-footer-notes">
-                <span>Confirmación inmediata sin duplicidad</span>
+                <span>Garantía de S/ 100 descontable de tu consumo</span>
                 <span>¿Prefieres llamar? +51 1 471 2850</span>
               </div>
             </form>
           </div>
         </div>
       </div>
+
+      {modalPagoVisible && datosPreReserva && (
+        <ModalPagoGarantia
+          datosPreReserva={datosPreReserva}
+          onConfirmarPago={finalizarReservaConPago}
+          onCerrar={() => setModalPagoVisible(false)}
+        />
+      )}
     </section>
   );
 }
 
 // ==========================================
-// COMPONENTE 4: LOGIN ADMINISTRADOR
+// COMPONENTE 5: LOGIN ADMINISTRADOR
 // ==========================================
 function LoginAdminModal({ onLoginExitoso, onVolverMenu }) {
   const [usuario, setUsuario] = useState("admin@inkasabores.pe");
@@ -549,7 +713,7 @@ function LoginAdminModal({ onLoginExitoso, onVolverMenu }) {
 }
 
 // ==========================================
-// COMPONENTE 5: PANEL ADMINISTRADOR COMPLETO
+// COMPONENTE 6: PANEL ADMINISTRADOR COMPLETO
 // ==========================================
 function PanelAdministrador({
   reservas,
@@ -563,16 +727,18 @@ function PanelAdministrador({
   volverWeb
 }) {
   const hoy = new Date().toISOString().split("T")[0];
-  // 'operaciones' | 'dashboard' | 'matriz' | 'bloqueos'
-  const [seccionActiva, setSeccionActiva] = useState("operaciones");
+  // 'operaciones' | 'dashboard' | 'matriz' | 'validar-pagos' | 'bloqueos'
+  const [seccionActiva, setSeccionActiva] = useState("validar-pagos");
   const [fechaFiltro, setFechaFiltro] = useState(hoy);
 
-  // Estados para Operaciones (CRUD)
   const [filtroTexto, setFiltroTexto] = useState("");
   const [filtroEstado, setFiltroEstado] = useState("Todos");
   const [modalAbierto, setModalAbierto] = useState(false);
   const [modoEdicion, setModoEdicion] = useState(false);
   const [idReservaEdicion, setIdReservaEdicion] = useState(null);
+
+  const [filtroMostrarPagos, setFiltroMostrarPagos] = useState("Pendientes de validación");
+  const [reservaParaRevisar, setReservaParaRevisar] = useState(null);
 
   const [formData, setFormData] = useState({
     nombre: "",
@@ -583,29 +749,36 @@ function PanelAdministrador({
     personas: "2 personas",
     mesa: "Mesa 1",
     notas: "",
-    estado: "Confirmada"
+    estado: "Confirmada",
+    medioPago: "Efectivo / Presencial",
+    nroOperacion: "---"
   });
 
-  // Modal para Bloquear Mesa por Incidente
   const [modalBloqueoAbierto, setModalBloqueoAbierto] = useState(false);
   const [mesaParaBloquear, setMesaParaBloquear] = useState("Mesa 1");
   const [motivoIncidente, setMotivoIncidente] = useState("Copa rota / rotura de mobiliario");
   const [cancelarReservasExistentes, setCancelarReservasExistentes] = useState(true);
 
-  // Filtrado de reservas
   const reservasDelDia = reservas.filter((r) => r.fecha === fechaFiltro);
   const bloqueadasDelDia = mesasBloqueadas.filter((b) => b.fecha === fechaFiltro);
+
+  const reservasPendientesCount = reservas.filter(r => r.estado === "Pendiente de validación").length;
 
   const reservasFiltradasOperaciones = reservas.filter((r) => {
     const coincideTexto =
       r.nombre.toLowerCase().includes(filtroTexto.toLowerCase()) ||
       r.telefono.includes(filtroTexto) ||
-      r.mesa.toLowerCase().includes(filtroTexto.toLowerCase());
+      r.mesa.toLowerCase().includes(filtroTexto.toLowerCase()) ||
+      (r.nroOperacion && r.nroOperacion.includes(filtroTexto));
     const coincideEstado = filtroEstado === "Todos" || r.estado === filtroEstado;
     return coincideTexto && coincideEstado;
   });
 
-  // Métricas del Dashboard (9 mesas)
+  const reservasParaValidar = reservas.filter((r) => {
+    if (filtroMostrarPagos === "Todos") return true;
+    return r.estado === filtroMostrarPagos;
+  });
+
   const totalReservasDia = reservasDelDia.length;
   const comensalesEsperados = reservasDelDia.reduce((acc, r) => acc + (parseInt(r.personas) || 1), 0);
   const mesasOcupadasCount = new Set(reservasDelDia.filter(r => r.estado !== "Cancelada").map((r) => r.mesa)).size;
@@ -613,7 +786,6 @@ function PanelAdministrador({
   const mesasOperativasTotal = MESAS_RESTAURANTE.length - mesasInhabilitadasCount;
   const porcentajeOcupacion = mesasOperativasTotal > 0 ? Math.round((mesasOcupadasCount / mesasOperativasTotal) * 100) : 100;
 
-  // CRUD Crear
   const abrirModalCrear = () => {
     setModoEdicion(false);
     setIdReservaEdicion(null);
@@ -626,12 +798,13 @@ function PanelAdministrador({
       personas: "2 personas",
       mesa: "Mesa 1",
       notas: "Registrado por recepción",
-      estado: "Confirmada"
+      estado: "Confirmada",
+      medioPago: "Presencial / Salón",
+      nroOperacion: "MANUAL-" + Math.floor(1000 + Math.random() * 9000)
     });
     setModalAbierto(true);
   };
 
-  // CRUD Editar
   const abrirModalEditar = (reserva) => {
     setModoEdicion(true);
     setIdReservaEdicion(reserva.id);
@@ -644,25 +817,24 @@ function PanelAdministrador({
       personas: reserva.personas,
       mesa: reserva.mesa,
       notas: reserva.notas || "",
-      estado: reserva.estado || "Confirmada"
+      estado: reserva.estado || "Confirmada",
+      medioPago: reserva.medioPago || "Yape",
+      nroOperacion: reserva.nroOperacion || "S/N"
     });
     setModalAbierto(true);
   };
 
-  // Guardar (Create / Update con validación)
   const manejarGuardar = (e) => {
     e.preventDefault();
 
-    // 1. Validar si la mesa está bloqueada por incidente todo el día
     const mesaEstaBloqueada = mesasBloqueadas.some(
       (b) => b.fecha === formData.fecha && b.mesa === formData.mesa
     );
     if (mesaEstaBloqueada) {
-      alert(`⚠️ Mesa Bloqueada: La ${formData.mesa} se encuentra fuera de servicio por incidente durante todo el día ${formData.fecha}. Debes rehabilitarla en la sección de Incidentes o elegir otra mesa.`);
+      alert(`⚠️ Mesa Bloqueada: La ${formData.mesa} se encuentra fuera de servicio durante el día ${formData.fecha}.`);
       return;
     }
 
-    // 2. Validar duplicado con otra reserva
     const conflicto = reservas.some(
       (r) =>
         r.id !== idReservaEdicion &&
@@ -673,7 +845,7 @@ function PanelAdministrador({
     );
 
     if (conflicto) {
-      alert(`⚠️ Conflicto de Salón: La ${formData.mesa} ya se encuentra ocupada a las ${formData.hora} para el día ${formData.fecha}. Elige otra mesa u horario.`);
+      alert(`⚠️ Conflicto de Salón: La ${formData.mesa} ya se encuentra ocupada a las ${formData.hora} para el día ${formData.fecha}.`);
       return;
     }
 
@@ -685,18 +857,36 @@ function PanelAdministrador({
     setModalAbierto(false);
   };
 
-  // Ejecutar el Bloqueo de Mesa
   const ejecutarBloqueo = (e) => {
     e.preventDefault();
     bloquearMesa(fechaFiltro, mesaParaBloquear, motivoIncidente, cancelarReservasExistentes);
     setModalBloqueoAbierto(false);
   };
 
+  const aprobarPagoYConfirmar = (reserva) => {
+    actualizarReserva({
+      ...reserva,
+      estado: "Confirmada",
+      notas: `${reserva.notas ? reserva.notas + " | " : ""}Garantía S/ 100 validada por administración`
+    });
+    setReservaParaRevisar(null);
+    alert(`✓ Pago validado con éxito. Se ha confirmado la ${reserva.mesa} para ${reserva.nombre} y se simuló el envío de confirmación a ${reserva.email}.`);
+  };
+
+  const rechazarPago = (reserva) => {
+    if (window.confirm(`¿Deseas marcar como cancelada la reserva de ${reserva.nombre} por comprobante no válido?`)) {
+      actualizarReserva({
+        ...reserva,
+        estado: "Cancelada",
+        notas: `${reserva.notas ? reserva.notas + " | " : ""}Comprobante rechazado por administración`
+      });
+      setReservaParaRevisar(null);
+    }
+  };
+
   return (
     <div className="admin-layout">
-      {/* ==========================================
-          MENÚ LATERAL (SIDEBAR) EXCLUSIVO DEL ADMIN
-          ========================================== */}
+      {/* SIDEBAR ADMIN */}
       <aside className="admin-sidebar">
         <div className="sidebar-header">
           <div className="logo-badge" style={{ width: "46px", height: "46px" }}>
@@ -705,7 +895,7 @@ function PanelAdministrador({
           </div>
           <div>
             <h4 style={{ color: "#d4af37", fontSize: "0.95rem", margin: 0 }}>Inka Sabores</h4>
-            <small style={{ color: "#777", fontSize: "0.7rem" }}>9 Mesas · Salón Central</small>
+            <small style={{ color: "#888", fontSize: "0.7rem" }}>9 Mesas · Salón Central</small>
           </div>
         </div>
 
@@ -714,23 +904,13 @@ function PanelAdministrador({
             onClick={() => setSeccionActiva("operaciones")}
             className={`sidebar-btn ${seccionActiva === "operaciones" ? "activo" : ""}`}
           >
-            <span className="sidebar-icon">⚡</span>
-            <span>Operaciones (CRUD)</span>
-          </button>
-
-          <button
-            onClick={() => setSeccionActiva("bloqueos")}
-            className={`sidebar-btn ${seccionActiva === "bloqueos" ? "activo" : ""}`}
-          >
-            <span className="sidebar-icon">🛠️</span>
-            <span>Control de Mesas (Incidentes)</span>
+            <span>Operaciones</span>
           </button>
 
           <button
             onClick={() => setSeccionActiva("dashboard")}
             className={`sidebar-btn ${seccionActiva === "dashboard" ? "activo" : ""}`}
           >
-            <span className="sidebar-icon">📊</span>
             <span>Dashboard & KPIs</span>
           </button>
 
@@ -738,36 +918,182 @@ function PanelAdministrador({
             onClick={() => setSeccionActiva("matriz")}
             className={`sidebar-btn ${seccionActiva === "matriz" ? "activo" : ""}`}
           >
-            <span className="sidebar-icon">📅</span>
             <span>Matriz de Salón (9)</span>
+          </button>
+
+          <button
+            onClick={() => setSeccionActiva("validar-pagos")}
+            className={`sidebar-btn btn-sidebar-validar ${seccionActiva === "validar-pagos" ? "activo" : ""}`}
+          >
+            <span>Validar Pagos {reservasPendientesCount > 0 ? reservasPendientesCount : ""}</span>
+          </button>
+
+          <button
+            onClick={() => setSeccionActiva("bloqueos")}
+            className={`sidebar-btn ${seccionActiva === "bloqueos" ? "activo" : ""}`}
+          >
+            <span>Mesas</span>
           </button>
         </nav>
 
         <div className="sidebar-footer">
           <button onClick={volverWeb} className="sidebar-link-btn">
-            🌐 Ir a la Web Pública
+            Ir a la Web Pública
           </button>
           <button onClick={cerrarSesion} className="sidebar-logout-btn">
-            🚪 Cerrar Sesión
+            Cerrar Sesión
           </button>
         </div>
       </aside>
 
-      {/* ==========================================
-          ÁREA PRINCIPAL DE CONTENIDO
-          ========================================== */}
+      {/* CONTENIDO PRINCIPAL */}
       <main className="admin-main-content">
-        {/* ==========================================
-            APARTADO 1: OPERACIONES (CRUD PRINCIPAL)
-            ========================================== */}
+        {/* VALIDACIÓN DE PAGOS (CAPTURA 09) */}
+        {seccionActiva === "validar-pagos" && (
+          <div className="seccion-validar-pagos-view">
+            <div className="validar-pagos-header-row">
+              <div>
+                <span className="subtitle-garantia-italica">Garantía de Reserva</span>
+                <h2 className="title-validacion-pagos">Validación de Pagos</h2>
+                <p className="desc-validacion-pagos">
+                  Revisa el comprobante de S/ 100 (Yape o transferencia) y confirma la reserva enviando un correo al cliente.
+                </p>
+              </div>
+
+              <div className="filtro-mostrar-dropdown">
+                <label>MOSTRAR:</label>
+                <select
+                  value={filtroMostrarPagos}
+                  onChange={(e) => setFiltroMostrarPagos(e.target.value)}
+                >
+                  <option value="Pendientes de validación">Pendientes de validación</option>
+                  <option value="Confirmada">Confirmadas</option>
+                  <option value="Todos">Todos</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="tabla-validar-container">
+              <table className="tabla-validar-pagos">
+                <thead>
+                  <tr>
+                    <th>CLIENTE</th>
+                    <th>FECHA & HORA</th>
+                    <th>MESA</th>
+                    <th>PAGO</th>
+                    <th>ESTADO</th>
+                    <th>ACCIÓN</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {reservasParaValidar.length === 0 ? (
+                    <tr>
+                      <td colSpan="6" style={{ textAlign: "center", padding: "40px", color: "#888" }}>
+                        No hay reservas en estado "{filtroMostrarPagos}".
+                      </td>
+                    </tr>
+                  ) : (
+                    reservasParaValidar.map((r) => (
+                      <tr key={r.id}>
+                        <td>
+                          <strong className="nombre-cliente-td">{r.nombre}</strong>
+                          <span className="correo-cliente-td">{r.email}</span>
+                        </td>
+                        <td>
+                          <span>{r.fecha}</span>
+                          <span style={{ display: "block" }}>{r.hora} hrs</span>
+                        </td>
+                        <td>
+                          <span className="pill-mesa-gris">{r.mesa}</span>
+                        </td>
+                        <td>
+                          <span>S/ {r.montoGarantia || 100}· {r.medioPago || "Yape"}</span>
+                          <span style={{ display: "block", color: "#888", fontSize: "0.75rem" }}>
+                            Op. {r.nroOperacion || "04587123"}
+                          </span>
+                        </td>
+                        <td>
+                          <span className={`pill-estado-validacion ${r.estado ? r.estado.toLowerCase().replace(/ /g, "-") : "pendiente-de-validación"}`}>
+                            {r.estado ? r.estado.toUpperCase() : "PENDIENTE DE VALIDACIÓN"}
+                          </span>
+                        </td>
+                        <td>
+                          <button
+                            onClick={() => setReservaParaRevisar(r)}
+                            className="btn-revisar-comprobante"
+                          >
+                            Revisar comprobante
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL DE REVISIÓN DE COMPROBANTE */}
+        {reservaParaRevisar && (
+          <div className="modal-backdrop">
+            <div className="bg-card modal-content" style={{ maxWidth: "520px", borderTop: "4px solid #d4af37" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "15px", borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "10px" }}>
+                <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: 700, color: "#d4af37" }}>
+                  Comprobante de Pago — {reservaParaRevisar.nombre}
+                </h3>
+                <button onClick={() => setReservaParaRevisar(null)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "#888" }}>✕</button>
+              </div>
+
+              <div style={{ background: "#1c1c20", padding: "14px", borderRadius: "6px", marginBottom: "15px", fontSize: "0.85rem", color: "#e0e0e0" }}>
+                <p style={{ margin: "0 0 5px" }}><strong>Monto de Garantía:</strong> S/ {reservaParaRevisar.montoGarantia || 100}.00</p>
+                <p style={{ margin: "0 0 5px" }}><strong>Medio de Pago:</strong> {reservaParaRevisar.medioPago || "Yape"}</p>
+                <p style={{ margin: "0 0 5px" }}><strong>N° de Operación:</strong> {reservaParaRevisar.nroOperacion || "04587123"}</p>
+                <p style={{ margin: "0" }}><strong>Mesa Asignada:</strong> {reservaParaRevisar.mesa} ({reservaParaRevisar.fecha} - {reservaParaRevisar.hora} hrs)</p>
+              </div>
+
+              <div style={{ border: "1px solid rgba(255,255,255,0.1)", borderRadius: "6px", padding: "15px", textAlign: "center", background: "#16161a", marginBottom: "20px" }}>
+                <span style={{ display: "block", fontSize: "0.75rem", color: "#888", marginBottom: "8px" }}>Vista del Voucher adjuntado por el comensal:</span>
+                <div style={{ width: "100%", height: "160px", background: "#0c0c0e", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "4px", border: "1px dashed rgba(212,175,55,0.3)", color: "#d4af37", fontSize: "0.85rem" }}>
+                  🧾 Voucher Yape/BCP verificado (Op. {reservaParaRevisar.nroOperacion || "04587123"})
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "10px" }}>
+                <button
+                  onClick={() => aprobarPagoYConfirmar(reservaParaRevisar)}
+                  className="btn btn-gold"
+                  style={{ flex: 1.5, padding: "12px", borderRadius: "6px", fontWeight: "600" }}
+                >
+                  ✓ Aprobar y Confirmar Reserva
+                </button>
+                <button
+                  onClick={() => rechazarPago(reservaParaRevisar)}
+                  className="btn"
+                  style={{ background: "rgba(231,76,60,0.15)", border: "1px solid #e74c3c", color: "#ff7675", padding: "12px", borderRadius: "6px", fontWeight: "600" }}
+                >
+                  Rechazar
+                </button>
+                <button
+                  onClick={() => setReservaParaRevisar(null)}
+                  className="btn btn-outline"
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* OPERACIONES */}
         {seccionActiva === "operaciones" && (
           <div>
             <div className="admin-topbar">
               <div>
                 <span className="subtitle-cursive" style={{ fontSize: "1.3rem" }}>Módulo de Control</span>
-                <h2 style={{ color: "#d4af37", fontSize: "1.8rem" }}>Operaciones y Gestión de Reservas</h2>
+                <h2 style={{ color: "#d4af37", fontSize: "1.8rem" }}>Operaciones y Reservas</h2>
                 <p style={{ color: "#888", fontSize: "0.85rem" }}>
-                  Crear, consultar, actualizar estados y eliminar reservas de las 9 mesas del restaurante.
+                  Crear, actualizar estados y eliminar reservas de las 9 mesas del restaurante.
                 </p>
               </div>
 
@@ -781,13 +1107,12 @@ function PanelAdministrador({
               </div>
             </div>
 
-            {/* Filtros de búsqueda (Read) */}
             <div className="bg-card" style={{ padding: "18px 20px", marginBottom: "25px", display: "flex", gap: "15px", flexWrap: "wrap", alignItems: "center" }}>
               <div style={{ flex: 1, minWidth: "220px" }}>
-                <label style={{ display: "block", fontSize: "0.75rem", color: "#d4af37", marginBottom: "5px" }}>BUSCADOR RÁPIDO:</label>
+                <label style={{ display: "block", fontSize: "0.75rem", color: "#d4af37", marginBottom: "5px" }}>BUSCADOR:</label>
                 <input
                   type="text"
-                  placeholder="Buscar por cliente, teléfono o mesa..."
+                  placeholder="Buscar por cliente, N° operación, teléfono o mesa..."
                   value={filtroTexto}
                   onChange={(e) => setFiltroTexto(e.target.value)}
                   style={{ width: "100%", padding: "9px 12px", background: "#0c0c0e", border: "1px solid #2a2a2e", borderRadius: "4px", color: "#fff", outline: "none" }}
@@ -802,14 +1127,14 @@ function PanelAdministrador({
                   style={{ padding: "9px 12px", background: "#0c0c0e", border: "1px solid #2a2a2e", borderRadius: "4px", color: "#fff" }}
                 >
                   <option value="Todos">Todos los estados</option>
+                  <option value="Pendiente de validación">Pendiente de validación</option>
                   <option value="Confirmada">Confirmada</option>
-                  <option value="En Mesa">En Mesa (Sentados)</option>
+                  <option value="En Mesa">En Mesa</option>
                   <option value="Cancelada">Cancelada</option>
                 </select>
               </div>
             </div>
 
-            {/* Tabla CRUD */}
             <div className="bg-card" style={{ overflowX: "auto", borderRadius: "8px" }}>
               <table className="tabla-crud">
                 <thead>
@@ -817,16 +1142,15 @@ function PanelAdministrador({
                     <th>CLIENTE</th>
                     <th>FECHA & HORA</th>
                     <th>MESA</th>
-                    <th>GRUPO</th>
-                    <th>CONTACTO</th>
+                    <th>PAGO / GARANTÍA</th>
                     <th>ESTADO</th>
-                    <th>ACCIONES (CRUD)</th>
+                    <th>ACCIONES</th>
                   </tr>
                 </thead>
                 <tbody>
                   {reservasFiltradasOperaciones.length === 0 ? (
                     <tr>
-                      <td colSpan="7" style={{ textAlign: "center", padding: "35px", color: "#777" }}>
+                      <td colSpan="6" style={{ textAlign: "center", padding: "35px", color: "#777" }}>
                         No se encontraron reservas con los filtros aplicados.
                       </td>
                     </tr>
@@ -835,24 +1159,26 @@ function PanelAdministrador({
                       <tr key={r.id}>
                         <td>
                           <strong>{r.nombre}</strong>
+                          <small style={{ display: "block", color: "#aaa" }}>📞 {r.telefono}</small>
                           {r.notas && <small style={{ display: "block", color: "#f3e5ab" }}>"{r.notas}"</small>}
                         </td>
                         <td>{r.fecha} <br /> <span style={{ color: "#d4af37" }}>{r.hora} hrs</span></td>
                         <td>
                           <span className="badge-mesa">{r.mesa}</span>
-                        </td>
-                        <td>{r.personas}</td>
-                        <td>
-                          <small>📞 {r.telefono}</small><br />
-                          <small style={{ color: "#888" }}>✉️ {r.email}</small>
+                          <small style={{ display: "block", color: "#777", marginTop: "2px" }}>{r.personas}</small>
                         </td>
                         <td>
-                          <span className={`badge-estado ${r.estado ? r.estado.toLowerCase().replace(" ", "-") : "confirmada"}`}>
+                          <strong style={{ color: "#2ecc71" }}>S/ {r.montoGarantia || 100}</strong>
+                          <small style={{ display: "block", color: "#d4af37" }}>{r.medioPago || "Yape"}</small>
+                          <small style={{ color: "#888" }}>Op: {r.nroOperacion || "---"}</small>
+                        </td>
+                        <td>
+                          <span className={`badge-estado ${r.estado ? r.estado.toLowerCase().replace(/ /g, "-") : "confirmada"}`}>
                             {r.estado || "Confirmada"}
                           </span>
                         </td>
                         <td>
-                          <div style={{ display: "flex", gap: "6px" }}>
+                          <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
                             <button
                               onClick={() => abrirModalEditar(r)}
                               className="btn-accion-edit"
@@ -862,14 +1188,14 @@ function PanelAdministrador({
                             </button>
                             <button
                               onClick={() => {
-                                if (window.confirm(`¿Deseas eliminar permanentemente la reserva de ${r.nombre}?`)) {
+                                if (window.confirm(`¿Deseas eliminar la reserva de ${r.nombre}?`)) {
                                   eliminarReserva(r.id);
                                 }
                               }}
                               className="btn-accion-delete"
                               title="Eliminar reserva"
                             >
-                              🗑️ Borrar
+                              🗑️
                             </button>
                           </div>
                         </td>
@@ -882,9 +1208,7 @@ function PanelAdministrador({
           </div>
         )}
 
-        {/* ==========================================
-            APARTADO 2: CONTROL DE MESAS (INCIDENTES Y BLOQUEOS)
-            ========================================== */}
+        {/* CONTROL DE MESAS (INCIDENTES) */}
         {seccionActiva === "bloqueos" && (
           <div>
             <div className="admin-topbar">
@@ -892,51 +1216,46 @@ function PanelAdministrador({
                 <span className="subtitle-cursive" style={{ fontSize: "1.3rem" }}>Gestión de Salón</span>
                 <h2 style={{ color: "#d4af37", fontSize: "1.8rem" }}>Control de Incidentes & Bloqueo de Mesas</h2>
                 <p style={{ color: "#888", fontSize: "0.85rem" }}>
-                  Inhabilita o rehabilita una mesa completa por todo el día debido a incidentes (roturas, derrames, mantenimiento).
+                  Inhabilita o rehabilita una mesa completa por todo el día debido a incidentes.
                 </p>
               </div>
 
-              <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                <div>
-                  <label style={{ display: "block", fontSize: "0.75rem", color: "#d4af37", marginBottom: "4px" }}>FECHA:</label>
-                  <input
-                    type="date"
-                    value={fechaFiltro}
-                    onChange={(e) => setFechaFiltro(e.target.value)}
-                    className="admin-date-input"
-                  />
-                </div>
+              <div>
+                <label style={{ display: "block", fontSize: "0.75rem", color: "#d4af37", marginBottom: "4px" }}>FECHA:</label>
+                <input
+                  type="date"
+                  value={fechaFiltro}
+                  onChange={(e) => setFechaFiltro(e.target.value)}
+                  className="admin-date-input"
+                />
               </div>
             </div>
 
-            {/* Panel de Alerta si hay incidentes activos en esa fecha */}
             {bloqueadasDelDia.length > 0 && (
               <div style={{ background: "rgba(231,76,60,0.12)", border: "1px solid #e74c3c", padding: "16px 20px", borderRadius: "8px", marginBottom: "25px", color: "#ff8b8b" }}>
                 <strong>⚠️ {bloqueadasDelDia.length} mesa(s) fuera de servicio para el {fechaFiltro}:</strong>
                 <ul style={{ marginTop: "8px", paddingLeft: "20px", fontSize: "0.85rem" }}>
                   {bloqueadasDelDia.map(b => (
                     <li key={b.id}>
-                      <strong>{b.mesa}:</strong> {b.motivo} — <button onClick={() => rehabilitarMesa(b.id)} style={{ background: "none", border: "underline", color: "#fff", cursor: "pointer", textDecoration: "underline", padding: "0 4px" }}>Rehabilitar mesa ahora</button>
+                      <strong>{b.mesa}:</strong> {b.motivo} — <button onClick={() => rehabilitarMesa(b.id)} style={{ background: "none", border: "none", color: "#fff", cursor: "pointer", textDecoration: "underline", padding: "0 4px" }}>Rehabilitar mesa ahora</button>
                     </li>
                   ))}
                 </ul>
               </div>
             )}
 
-            {/* Grid de las 9 Mesas con Estado de Mantenimiento */}
             <div className="grid-mesas-dashboard">
-              {MESAS_RESTAURANTE.map((mesa) => {
-                const bloqueo = bloqueadasDelDia.find((b) => b.mesa === mesa);
-                const reservasAfectadas = reservasDelDia.filter((r) => r.mesa === mesa && r.estado !== "Cancelada");
+              {MESAS_RESTAURANTE.map((m) => {
+                const bloqueo = bloqueadasDelDia.find((b) => b.mesa === m.id);
+                const reservasAfectadas = reservasDelDia.filter((r) => r.mesa === m.id && r.estado !== "Cancelada");
 
                 return (
                   <div
-                    key={mesa}
+                    key={m.id}
                     className={`mesa-box-card ${bloqueo ? "mesa-bloqueada-box" : "mesa-libre-box"}`}
-                    style={{ position: "relative" }}
                   >
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-                      <strong style={{ fontSize: "1.1rem" }}>{mesa}</strong>
+                      <strong style={{ fontSize: "1.05rem" }}>{m.nombre} · {m.cap}</strong>
                       <span className={`badge-estado ${bloqueo ? "cancelada" : "confirmada"}`}>
                         {bloqueo ? "⛔ FUERA DE SERVICIO" : "✅ OPERATIVA"}
                       </span>
@@ -944,46 +1263,28 @@ function PanelAdministrador({
 
                     {bloqueo ? (
                       <div style={{ marginBottom: "15px" }}>
-                        <small style={{ color: "#ff7675", display: "block", marginBottom: "4px" }}>
-                          <strong>Incidente reportado:</strong>
-                        </small>
-                        <p style={{ fontSize: "0.82rem", color: "#ccc", margin: 0, fontStyle: "italic" }}>
-                          "{bloqueo.motivo}"
-                        </p>
-                        <small style={{ color: "#888", display: "block", marginTop: "6px" }}>
-                          Bloqueada para todo el día {fechaFiltro}. Ningún cliente puede reservarla.
-                        </small>
+                        <small style={{ color: "#ff7675", display: "block", marginBottom: "4px" }}>Incidente:</small>
+                        <p style={{ fontSize: "0.82rem", color: "#ccc", margin: 0, fontStyle: "italic" }}>"{bloqueo.motivo}"</p>
                       </div>
                     ) : (
                       <div style={{ marginBottom: "15px" }}>
-                        <small style={{ color: "#2ecc71", display: "block" }}>
-                          Mesa disponible para recibir reservas.
-                        </small>
-                        <small style={{ color: "#888" }}>
-                          {reservasAfectadas.length} reservas registradas para esta fecha.
-                        </small>
+                        <small style={{ color: "#2ecc71", display: "block" }}>Disponible para reservas.</small>
+                        <small style={{ color: "#888" }}>{reservasAfectadas.length} reservas registradas hoy.</small>
                       </div>
                     )}
 
                     <div style={{ borderTop: "1px solid rgba(255,255,255,0.08)", paddingTop: "12px" }}>
                       {bloqueo ? (
-                        <button
-                          onClick={() => rehabilitarMesa(bloqueo.id)}
-                          className="btn btn-gold"
-                          style={{ width: "100%", padding: "8px", fontSize: "0.78rem" }}
-                        >
-                          ✓ Rehabilitar / Habilitar Mesa
+                        <button onClick={() => rehabilitarMesa(bloqueo.id)} className="btn btn-gold" style={{ width: "100%", padding: "8px", fontSize: "0.78rem" }}>
+                          ✓ Rehabilitar Mesa
                         </button>
                       ) : (
                         <button
-                          onClick={() => {
-                            setMesaParaBloquear(mesa);
-                            setModalBloqueoAbierto(true);
-                          }}
+                          onClick={() => { setMesaParaBloquear(m.id); setModalBloqueoAbierto(true); }}
                           className="btn-accion-delete"
                           style={{ width: "100%", padding: "8px", fontSize: "0.78rem", cursor: "pointer", display: "block", textAlign: "center" }}
                         >
-                          ⛔ Cancelar / Bloquear Mesa por Incidente
+                          ⛔ Bloquear Mesa por Incidente
                         </button>
                       )}
                     </div>
@@ -994,9 +1295,7 @@ function PanelAdministrador({
           </div>
         )}
 
-        {/* ==========================================
-            APARTADO 3: DASHBOARD & KPIS
-            ========================================== */}
+        {/* DASHBOARD & KPIS */}
         {seccionActiva === "dashboard" && (
           <div>
             <div className="admin-topbar">
@@ -1004,7 +1303,7 @@ function PanelAdministrador({
                 <span className="subtitle-cursive" style={{ fontSize: "1.3rem" }}>Métricas Ejecutivas</span>
                 <h2 style={{ color: "#d4af37", fontSize: "1.8rem" }}>Dashboard de Salón</h2>
                 <p style={{ color: "#888", fontSize: "0.85rem" }}>
-                  Análisis de ocupación y comensales proyectados para las 9 mesas del restaurante.
+                  Análisis de ocupación, comensales proyectados e ingresos por garantía (S/ 100).
                 </p>
               </div>
 
@@ -1028,9 +1327,7 @@ function PanelAdministrador({
                   <div className="kpi-bar-bg">
                     <div className="kpi-bar-fill" style={{ width: `${porcentajeOcupacion}%` }}></div>
                   </div>
-                  <small className="kpi-subtext">
-                    {mesasInhabilitadasCount > 0 ? `(${mesasInhabilitadasCount} mesa(s) bloqueadas por incidente)` : "100% de mesas operativas"}
-                  </small>
+                  <small className="kpi-subtext">{mesasInhabilitadasCount > 0 ? `(${mesasInhabilitadasCount} bloqueadas)` : "100% mesas operativas"}</small>
                 </div>
               </div>
 
@@ -1040,43 +1337,42 @@ function PanelAdministrador({
                   <span className="kpi-label">COMENSALES DEL DÍA</span>
                   <h4 className="kpi-value" style={{ color: "#2ecc71" }}>{comensalesEsperados} personas</h4>
                   <small className="kpi-subtext" style={{ marginTop: "10px", display: "block" }}>
-                    Proyección de vajilla y preparación en cocina
+                    Proyección de vajilla y mise-en-place
                   </small>
                 </div>
               </div>
 
               <div className="kpi-card" style={{ borderLeft: "4px solid #3498db" }}>
-                <div className="kpi-icon">⏱️</div>
+                <div className="kpi-icon">💰</div>
                 <div className="kpi-content">
-                  <span className="kpi-label">RESERVAS TOTALES</span>
-                  <h4 className="kpi-value" style={{ color: "#3498db" }}>{totalReservasDia} registradas</h4>
+                  <span className="kpi-label">GARANTÍAS RECAUDADAS</span>
+                  <h4 className="kpi-value" style={{ color: "#3498db" }}>S/ {totalReservasDia * 100}</h4>
                   <small className="kpi-subtext" style={{ marginTop: "10px", display: "block" }}>
-                    {reservasDelDia.filter(r => r.estado === "En Mesa").length} clientes ya en salón
+                    {totalReservasDia} reservas registradas
                   </small>
                 </div>
               </div>
             </div>
 
-            {/* Grilla visual 9 mesas */}
             <div className="bg-card" style={{ padding: "25px" }}>
               <h3 style={{ color: "#d4af37", marginBottom: "15px", fontFamily: "'Cinzel', serif" }}>
                 MAPA EN TIEMPO REAL DEL SALÓN (9 MESAS)
               </h3>
               <div className="grid-mesas-dashboard">
-                {MESAS_RESTAURANTE.map((mesa) => {
-                  const bloqueo = bloqueadasDelDia.find(b => b.mesa === mesa);
-                  const reservaActiva = reservasDelDia.find(r => r.mesa === mesa && r.estado !== "Cancelada");
+                {MESAS_RESTAURANTE.map((m) => {
+                  const bloqueo = bloqueadasDelDia.find(b => b.mesa === m.id);
+                  const reservaActiva = reservasDelDia.find(r => r.mesa === m.id && r.estado !== "Cancelada");
                   return (
                     <div
-                      key={mesa}
+                      key={m.id}
                       className={`mesa-box-card ${bloqueo ? "mesa-bloqueada-box" : reservaActiva ? "mesa-ocupada-box" : "mesa-libre-box"}`}
                     >
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                        <strong>{mesa}</strong>
+                        <strong>{m.nombre} · {m.cap}</strong>
                         <span>{bloqueo ? "⛔ Bloqueada" : reservaActiva ? "🔴 Ocupada" : "🟢 Libre"}</span>
                       </div>
                       {bloqueo ? (
-                        <small style={{ color: "#ff7675" }}>Incidente: {bloqueo.motivo}</small>
+                        <small style={{ color: "#ff7675" }}>{bloqueo.motivo}</small>
                       ) : reservaActiva ? (
                         <div>
                           <small style={{ color: "#d4af37" }}>{reservaActiva.hora} hrs</small><br />
@@ -1084,7 +1380,7 @@ function PanelAdministrador({
                           <small style={{ color: "#aaa" }}>{reservaActiva.personas}</small>
                         </div>
                       ) : (
-                        <small style={{ color: "#888" }}>Disponible para asignar</small>
+                        <small style={{ color: "#888" }}>Disponible</small>
                       )}
                     </div>
                   );
@@ -1094,9 +1390,7 @@ function PanelAdministrador({
           </div>
         )}
 
-        {/* ==========================================
-            APARTADO 4: MATRIZ DE SALÓN
-            ========================================== */}
+        {/* MATRIZ DE SALÓN */}
         {seccionActiva === "matriz" && (
           <div>
             <div className="admin-topbar">
@@ -1104,7 +1398,7 @@ function PanelAdministrador({
                 <span className="subtitle-cursive" style={{ fontSize: "1.3rem" }}>Ocupación de Espacios</span>
                 <h2 style={{ color: "#d4af37", fontSize: "1.8rem" }}>Matriz de Salón (9 Mesas)</h2>
                 <p style={{ color: "#888", fontSize: "0.85rem" }}>
-                  Revisa qué mesas y turnos están libres, ocupados o fuera de servicio por incidentes.
+                  Revisa qué mesas y turnos están libres, ocupados o fuera de servicio.
                 </p>
               </div>
 
@@ -1125,10 +1419,10 @@ function PanelAdministrador({
                   <tr>
                     <th>HORARIO</th>
                     {MESAS_RESTAURANTE.map((m) => {
-                      const bloqueada = bloqueadasDelDia.some(b => b.mesa === m);
+                      const bloqueada = bloqueadasDelDia.some(b => b.mesa === m.id);
                       return (
-                        <th key={m} style={{ background: bloqueada ? "#2e1a1a" : "#1f1f1f", color: bloqueada ? "#ff7675" : "#d4af37" }}>
-                          {m} {bloqueada ? "⛔" : ""}
+                        <th key={m.id} style={{ background: bloqueada ? "#2e1a1a" : "#1f1f1f", color: bloqueada ? "#ff7675" : "#d4af37" }}>
+                          {m.nombre} ({m.cap}) {bloqueada ? "⛔" : ""}
                         </th>
                       );
                     })}
@@ -1138,24 +1432,24 @@ function PanelAdministrador({
                   {HORARIOS_DISPONIBLES.map((hora) => (
                     <tr key={hora}>
                       <td className="hora-celda">{hora} hrs</td>
-                      {MESAS_RESTAURANTE.map((mesa) => {
-                        const bloqueo = bloqueadasDelDia.find(b => b.mesa === mesa);
+                      {MESAS_RESTAURANTE.map((m) => {
+                        const bloqueo = bloqueadasDelDia.find(b => b.mesa === m.id);
                         const reservaEncontrada = reservasDelDia.find(
-                          (r) => r.hora === hora && r.mesa === mesa && r.estado !== "Cancelada"
+                          (r) => r.hora === hora && r.mesa === m.id && r.estado !== "Cancelada"
                         );
 
                         if (bloqueo) {
                           return (
-                            <td key={mesa} className="celda-bloqueada" title={bloqueo.motivo}>
+                            <td key={m.id} className="celda-bloqueada" title={bloqueo.motivo}>
                               <strong style={{ color: "#ff7675" }}>⛔ Fuera de servicio</strong>
-                              <small style={{ color: "#aaa", display: "block" }}>Incidente del día</small>
+                              <small style={{ color: "#aaa", display: "block" }}>Incidente</small>
                             </td>
                           );
                         }
 
                         return (
                           <td
-                            key={mesa}
+                            key={m.id}
                             className={`estado-celda ${reservaEncontrada ? "celda-ocupada" : "celda-libre"}`}
                           >
                             {reservaEncontrada ? (
@@ -1178,9 +1472,7 @@ function PanelAdministrador({
         )}
       </main>
 
-      {/* ==========================================
-          MODAL DE CREACIÓN / EDICIÓN DE RESERVA (CRUD)
-          ========================================== */}
+      {/* MODAL EDICIÓN CRUD */}
       {modalAbierto && (
         <div className="modal-backdrop">
           <div className="bg-card modal-content">
@@ -1216,16 +1508,6 @@ function PanelAdministrador({
                 </div>
               </div>
 
-              <div className="form-group" style={{ marginBottom: "12px" }}>
-                <label style={{ display: "block", fontSize: "0.75rem", color: "#d4af37", marginBottom: "4px" }}>Correo Electrónico</label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  style={{ width: "100%", padding: "8px 10px", background: "#0c0c0e", border: "1px solid #333", color: "#fff", borderRadius: "4px" }}
-                />
-              </div>
-
               <div className="form-row-3" style={{ marginBottom: "12px" }}>
                 <div>
                   <label style={{ display: "block", fontSize: "0.75rem", color: "#d4af37", marginBottom: "4px" }}>Fecha</label>
@@ -1256,14 +1538,11 @@ function PanelAdministrador({
                     onChange={(e) => setFormData({ ...formData, mesa: e.target.value })}
                     style={{ width: "100%", padding: "8px", background: "#0c0c0e", border: "1px solid #333", color: "#fff", borderRadius: "4px" }}
                   >
-                    {MESAS_RESTAURANTE.map(m => {
-                      const estaBloqueada = mesasBloqueadas.some(b => b.fecha === formData.fecha && b.mesa === m);
-                      return (
-                        <option key={m} value={m} disabled={estaBloqueada}>
-                          {m} {estaBloqueada ? "(⛔ Bloqueada por Incidente)" : ""}
-                        </option>
-                      );
-                    })}
+                    {MESAS_RESTAURANTE.map(m => (
+                      <option key={m.id} value={m.id}>
+                        {m.nombre} · {m.cap}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -1284,34 +1563,25 @@ function PanelAdministrador({
                 </div>
 
                 <div>
-                  <label style={{ display: "block", fontSize: "0.75rem", color: "#d4af37", marginBottom: "4px" }}>Estado de la Reserva</label>
+                  <label style={{ display: "block", fontSize: "0.75rem", color: "#d4af37", marginBottom: "4px" }}>Estado</label>
                   <select
                     value={formData.estado}
                     onChange={(e) => setFormData({ ...formData, estado: e.target.value })}
                     style={{ width: "100%", padding: "8px", background: "#0c0c0e", border: "1px solid #333", color: "#fff", borderRadius: "4px" }}
                   >
+                    <option value="Pendiente de validación">Pendiente de validación</option>
                     <option value="Confirmada">Confirmada</option>
-                    <option value="En Mesa">En Mesa (Sentados)</option>
+                    <option value="En Mesa">En Mesa</option>
                     <option value="Cancelada">Cancelada</option>
                   </select>
                 </div>
-              </div>
-
-              <div style={{ marginBottom: "20px" }}>
-                <label style={{ display: "block", fontSize: "0.75rem", color: "#d4af37", marginBottom: "4px" }}>Observaciones / Notas</label>
-                <input
-                  type="text"
-                  value={formData.notas}
-                  onChange={(e) => setFormData({ ...formData, notas: e.target.value })}
-                  style={{ width: "100%", padding: "8px 10px", background: "#0c0c0e", border: "1px solid #333", color: "#fff", borderRadius: "4px" }}
-                />
               </div>
 
               <div style={{ display: "flex", gap: "10px" }}>
                 <button type="submit" className="btn btn-gold" style={{ flex: 1, padding: "11px" }}>
                   {modoEdicion ? "Guardar Cambios" : "Crear Reserva"}
                 </button>
-                <button type="button" onClick={() => setModalAbierto(false)} className="btn btn-outline" style={{ cursor: "pointer" }}>
+                <button type="button" onClick={() => setModalAbierto(false)} className="btn btn-outline">
                   Cancelar
                 </button>
               </div>
@@ -1320,9 +1590,7 @@ function PanelAdministrador({
         </div>
       )}
 
-      {/* ==========================================
-          MODAL DE BLOQUEO POR INCIDENTE
-          ========================================== */}
+      {/* MODAL BLOQUEO INCIDENTE */}
       {modalBloqueoAbierto && (
         <div className="modal-backdrop">
           <div className="bg-card modal-content" style={{ borderTop: "3px solid #e74c3c" }}>
@@ -1340,7 +1608,7 @@ function PanelAdministrador({
             <form onSubmit={ejecutarBloqueo}>
               <div style={{ marginBottom: "15px" }}>
                 <label style={{ display: "block", fontSize: "0.75rem", color: "#d4af37", marginBottom: "5px" }}>
-                  Motivo del Incidente o Cancelación:
+                  Motivo del Incidente:
                 </label>
                 <select
                   value={motivoIncidente}
@@ -1353,12 +1621,6 @@ function PanelAdministrador({
                   <option value="Mantenimiento, lijado o barnizado de madera">Mantenimiento, lijado o barnizado de madera</option>
                   <option value="Reserva exclusiva para evento privado">Reserva exclusiva para evento privado</option>
                 </select>
-                <input
-                  type="text"
-                  placeholder="O escribe un detalle adicional del incidente..."
-                  onChange={(e) => e.target.value && setMotivoIncidente(e.target.value)}
-                  style={{ width: "100%", padding: "9px 12px", background: "#0c0c0e", border: "1px solid #333", color: "#fff", borderRadius: "4px" }}
-                />
               </div>
 
               <label className="checkbox-label" style={{ color: "#ff8b8b", fontSize: "0.8rem", marginBottom: "20px" }}>
@@ -1374,7 +1636,7 @@ function PanelAdministrador({
                 <button type="submit" className="btn-accion-delete" style={{ flex: 1, padding: "12px", fontSize: "0.85rem" }}>
                   Confirmar Bloqueo de Mesa
                 </button>
-                <button type="button" onClick={() => setModalBloqueoAbierto(false)} className="btn btn-outline" style={{ cursor: "pointer" }}>
+                <button type="button" onClick={() => setModalBloqueoAbierto(false)} className="btn btn-outline">
                   Cancelar
                 </button>
               </div>
@@ -1387,7 +1649,7 @@ function PanelAdministrador({
 }
 
 // ==========================================
-// COMPONENTE 6: PÁGINA DE CONTACTO Y QUEJAS
+// COMPONENTE 7: PÁGINA CONTACTO / RECLAMOS
 // ==========================================
 function PaginaContacto({ onVolverInicio }) {
   const [nombre, setNombre] = useState("");
@@ -1401,7 +1663,6 @@ function PaginaContacto({ onVolverInicio }) {
 
   const manejarEnvio = (e) => {
     e.preventDefault();
-
     const ticket = "INKA-" + Math.floor(100000 + Math.random() * 900000);
     setTicketGenerado(ticket);
     setEnviado(true);
@@ -1419,7 +1680,6 @@ function PaginaContacto({ onVolverInicio }) {
       `Detalle del mensaje:\n${mensaje}\n\n` +
       `Saludos cordiales.`
     );
-
     window.open(`mailto:${correoDestino}?subject=${subject}&body=${body}`, '_blank');
   };
 
@@ -1450,7 +1710,7 @@ function PaginaContacto({ onVolverInicio }) {
                 {ticketGenerado}
               </div>
               <p style={{ color: "#999", fontSize: "0.85rem", marginBottom: "25px" }}>
-                Se ha preparado tu correo hacia <strong>contacto@inkasabores.pe</strong>. Te responderemos en un plazo máximo de 24 horas hábiles.
+                Se ha preparado tu correo hacia <strong>contacto@inkasabores.pe</strong>. Te responderemos a la brevedad.
               </p>
               <button onClick={onVolverInicio} className="btn btn-gold">
                 Volver a la carta principal
@@ -1511,7 +1771,7 @@ function PaginaContacto({ onVolverInicio }) {
                 <label>Asunto</label>
                 <input
                   type="text"
-                  placeholder="Ej. Consulta sobre reservas para grupos grandes / Calidad de atención"
+                  placeholder="Ej. Consulta sobre reservas para grupos grandes"
                   value={asunto}
                   onChange={(e) => setAsunto(e.target.value)}
                   required
@@ -1522,7 +1782,7 @@ function PaginaContacto({ onVolverInicio }) {
                 <label>Detalle de tu mensaje o queja</label>
                 <textarea
                   rows="5"
-                  placeholder="Por favor describe detalladamente tu consulta, fecha de visita si aplica, o cualquier observación relevante..."
+                  placeholder="Por favor describe detalladamente tu consulta..."
                   value={mensaje}
                   onChange={(e) => setMensaje(e.target.value)}
                   required
@@ -1551,7 +1811,6 @@ export default function App() {
   const [adminAutenticado, setAdminAutenticado] = useState(false);
   const [categoriaActiva, setCategoriaActiva] = useState("Especialidades");
 
-  // Estado global de reservas (CRUD)
   const [reservas, setReservas] = useState([
     {
       id: 1,
@@ -1563,7 +1822,10 @@ export default function App() {
       telefono: "+51 987 654 321",
       email: "cmendoza@email.com",
       notas: "Cerca a la ventana",
-      estado: "Confirmada"
+      estado: "Confirmada",
+      medioPago: "Yape",
+      nroOperacion: "08472194",
+      montoGarantia: 100
     },
     {
       id: 2,
@@ -1574,12 +1836,14 @@ export default function App() {
       nombre: "Lucía Paredes",
       telefono: "+51 912 345 678",
       email: "lucia.p@email.com",
-      notas: "Celebración de aniversario",
-      estado: "En Mesa"
+      notas: "Aniversario",
+      estado: "En Mesa",
+      medioPago: "Transferencia BCP",
+      nroOperacion: "09918231",
+      montoGarantia: 100
     }
   ]);
 
-  // Estado global de bloqueos / incidentes de mesas por día completo
   const [mesasBloqueadas, setMesasBloqueadas] = useState([
     {
       id: 101,
@@ -1601,14 +1865,8 @@ export default function App() {
     setReservas(reservas.filter((r) => r.id !== id));
   };
 
-  // Bloqueo de mesa completa por incidente
   const bloquearMesa = (fecha, mesa, motivo, cancelarReservas = true) => {
-    const nuevoBloqueo = {
-      id: Date.now(),
-      fecha,
-      mesa,
-      motivo
-    };
+    const nuevoBloqueo = { id: Date.now(), fecha, mesa, motivo };
     setMesasBloqueadas([...mesasBloqueadas, nuevoBloqueo]);
 
     if (cancelarReservas) {
@@ -1621,7 +1879,6 @@ export default function App() {
     }
   };
 
-  // Rehabilitar mesa
   const rehabilitarMesa = (bloqueoId) => {
     setMesasBloqueadas(mesasBloqueadas.filter(b => b.id !== bloqueoId));
   };
@@ -1670,7 +1927,7 @@ export default function App() {
         .nav-link-btn { background: none; border: none; font-size: 0.8rem; letter-spacing: 1px; cursor: pointer; font-family: inherit; }
         .nav-link-btn:hover { color: var(--primary-gold) !important; }
 
-        /* Buttons */
+        /* Botones */
         .btn { display: inline-block; padding: 10px 20px; font-size: 0.78rem; font-weight: 600; letter-spacing: 1px; border-radius: 3px; cursor: pointer; transition: all 0.3s ease; border: none; }
         .btn-gold { background-color: var(--primary-gold); color: #000; }
         .btn-gold:hover { background-color: #b59328; }
@@ -1708,8 +1965,6 @@ export default function App() {
         .categories { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 35px; }
         .cat-btn { background: transparent; border: 1px solid rgba(255, 255, 255, 0.2); color: var(--text-light-gray); padding: 8px 18px; border-radius: 4px; font-size: 0.8rem; cursor: pointer; transition: all 0.3s ease; }
         .cat-btn.active, .cat-btn:hover { background-color: var(--primary-gold); color: #000; border-color: var(--primary-gold); font-weight: 600; }
-
-        /* Platos Horizontales */
         .horizontal-card { background-color: var(--bg-card); display: flex; border-radius: 8px; overflow: hidden; align-items: center; border: 1px solid rgba(255,255,255,0.05); }
         .horizontal-card.full-width { grid-column: 1 / -1; }
         .horizontal-card img { width: 150px; height: 150px; object-fit: cover; }
@@ -1728,9 +1983,72 @@ export default function App() {
         .chef-card img { width: 100%; height: 180px; object-fit: cover; }
         .chef-card span { position: absolute; bottom: 12px; left: 15px; font-family: var(--font-heading); font-size: 0.82rem; background: rgba(0, 0, 0, 0.75); color: var(--primary-gold); padding: 4px 10px; border-radius: 3px; }
 
-        /* ==========================================
-           LOGIN ADMINISTRADOR
-           ========================================== */
+        /* MODAL DE PAGO (CAPTURA 04) */
+        .pago-modal-backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 3000; padding: 20px; }
+        .pago-modal-window { background: #ffffff; color: #222222; width: 100%; max-width: 580px; border-radius: 10px; padding: 30px 35px; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6); max-height: 94vh; overflow-y: auto; }
+        .pago-modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+        .pago-modal-header h3 { font-family: var(--font-body); font-size: 1.25rem; font-weight: 700; color: #111; margin: 0; }
+        .btn-cerrar-modal { background: none; border: none; font-size: 1.2rem; color: #666; cursor: pointer; }
+        .pago-box-garantia { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 6px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+        .pago-label-garantia { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.5px; color: #495057; }
+        .pago-monto-garantia { font-size: 1.55rem; font-weight: 800; color: #111; }
+        .pago-desc-texto { font-size: 0.8rem; color: #495057; line-height: 1.45; margin-bottom: 14px; }
+        .pago-resumen-pill { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; padding: 11px 15px; font-size: 0.78rem; color: #334155; margin-bottom: 15px; }
+        .pago-grid-cuentas { display: grid; grid-template-columns: 1fr 1.3fr 1.1fr; gap: 10px; margin-bottom: 6px; }
+        .pago-cuenta-item { border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 12px; background: #ffffff; }
+        .cuenta-label { display: block; font-size: 0.65rem; color: #64748b; font-weight: 700; margin-bottom: 4px; }
+        .cuenta-valor { display: block; font-size: 0.82rem; color: #0f172a; font-weight: 700; }
+        .cuenta-sub { display: block; font-size: 0.62rem; color: #64748b; margin-top: 2px; }
+        .pago-nota-ejemplo { display: block; font-size: 0.7rem; color: #94a3b8; margin-bottom: 16px; }
+        .pago-form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+        .pago-input-col label { display: block; font-size: 0.75rem; color: #334155; margin-bottom: 5px; font-weight: 600; }
+        .pago-input-col select, .pago-input-col input { width: 100%; border: 1px solid #cbd5e1; border-radius: 6px; padding: 9px 12px; font-size: 0.85rem; color: #0f172a; outline: none; background: #fff; }
+        .pago-upload-container { margin-bottom: 16px; }
+        .pago-upload-box { display: block; border: 1px solid #cbd5e1; border-radius: 6px; padding: 25px 20px; text-align: center; cursor: pointer; background: #f8fafc; transition: background 0.2s; }
+        .pago-upload-box:hover { background: #f1f5f9; }
+        .pago-voucher-preview { max-height: 120px; margin: 0 auto; display: block; border-radius: 4px; }
+        .pago-upload-placeholder { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .pago-icon-cross { width: 50px; height: 60px; border: 1px solid #cbd5e1; position: relative; margin-bottom: 8px; }
+        .pago-icon-cross::before, .pago-icon-cross::after { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; border-top: 1px solid #e2e8f0; transform: rotate(45deg); }
+        .pago-icon-cross::after { transform: rotate(-45deg); }
+        .pago-upload-placeholder span { background: #e2e8f0; color: #475569; font-size: 0.72rem; padding: 3px 10px; border-radius: 3px; }
+        .pago-checkbox-row { display: flex; align-items: flex-start; gap: 10px; font-size: 0.75rem; color: #334155; margin-bottom: 20px; cursor: pointer; }
+        .pago-checkbox-row input { margin-top: 2px; }
+        .pago-botones-footer { display: flex; gap: 10px; }
+        .btn-pago-confirmar { flex: 1; background: #2b2b2f; color: #ffffff; border: none; border-radius: 6px; padding: 12px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+        .btn-pago-confirmar:hover { background: #18181b; }
+        .btn-pago-cancelar { background: #ffffff; border: 1px solid #cbd5e1; color: #334155; border-radius: 6px; padding: 12px 22px; font-size: 0.85rem; cursor: pointer; }
+
+        /* BANNER RESERVA PENDIENTE (CAPTURA 05) */
+        .alerta-pendiente-box { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 6px; padding: 14px 18px; font-size: 0.82rem; color: #1e293b; line-height: 1.5; margin-bottom: 22px; }
+
+        /* Formulario Reserva */
+        .reserva-split-card { display: grid; grid-template-columns: 5fr 7fr; border-radius: 10px; overflow: hidden; border: 1px solid rgba(212, 175, 55, 0.25); background-color: #f4efe6; color: #2b2623; box-shadow: 0 20px 50px rgba(0,0,0,0.6); }
+        .reserva-img-col { background: url('https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1000&q=80') center/cover no-repeat; position: relative; min-height: 560px; }
+        .reserva-img-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(10,10,10,0.35), rgba(10,10,10,0.85)); padding: 35px; display: flex; flex-direction: column; justify-content: space-between; color: #fff; }
+        .reserva-tag { font-size: 0.7rem; letter-spacing: 2px; color: var(--gold-light); display: block; margin-bottom: 8px; }
+        .reserva-hero-title { font-family: 'Cormorant Garamond', serif; font-size: 2.6rem; font-weight: 400; line-height: 1.05; margin-bottom: 10px; color: #fff; }
+        .reserva-hero-sub { font-size: 0.85rem; color: #e0dcd5; max-width: 320px; }
+        .reserva-form-col { padding: 45px 50px; background-color: #f5f0e6; color: #2c2520; }
+        .form-small-title { font-size: 0.7rem; letter-spacing: 2px; color: #7a6a58; display: block; margin-bottom: 4px; }
+        .form-main-title { font-family: 'Cormorant Garamond', serif; font-size: 2.4rem; font-weight: 600; color: #1f1a17; margin-bottom: 6px; }
+        .form-subtitle { font-size: 0.85rem; color: #6e6259; margin-bottom: 25px; }
+        .inka-form label { display: block; font-size: 0.72rem; font-weight: 600; color: #4a3f35; margin-bottom: 6px; }
+        .inka-form input, .inka-form select { width: 100%; padding: 10px 4px; background: transparent; border: none; border-bottom: 1px solid #cfc6b8; color: #1f1a17; font-family: var(--font-body); font-size: 0.88rem; outline: none; }
+        .form-row-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 20px; }
+        .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 18px; }
+        .checkbox-label { display: flex !important; align-items: center; gap: 8px; margin: 18px 0; cursor: pointer; }
+        .btn-submit-reserva { width: 100%; background-color: #2b2b2f; color: #fff; display: flex; justify-content: space-between; align-items: center; padding: 13px 20px; border-radius: 4px; margin-bottom: 14px; }
+        .btn-submit-reserva:hover { background-color: #18181b; }
+        .form-footer-notes { display: flex; justify-content: space-between; font-size: 0.72rem; color: #7a6a58; }
+
+        /* Grilla pública 9 mesas */
+        .mesas-grid-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 6px; }
+        .mesa-chip { padding: 9px 10px; font-size: 0.75rem; border-radius: 4px; border: 1px solid #c8b9a6; background: #ebe4d8; color: #3b322c; cursor: pointer; font-weight: 600; text-align: center; }
+        .mesa-chip.seleccionada { background: #2b2b2f; color: #fff; border-color: #2b2b2f; }
+        .mesa-chip.ocupada { background: #e0d9cf; color: #9e9389; border-color: #d5cdc2; cursor: not-allowed; text-decoration: line-through; }
+
+        /* LOGIN ADMIN */
         .admin-login-fullscreen { min-height: 100vh; background: #09090b; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
         .admin-login-window { display: grid; grid-template-columns: 1fr 1fr; width: 100%; max-width: 950px; min-height: 520px; background: #111113; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.85); }
         .admin-login-left { background: radial-gradient(circle at center, #1b1712 0%, #0d0c0b 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; text-align: center; border-right: 1px solid rgba(255, 255, 255, 0.06); }
@@ -1758,11 +2076,16 @@ export default function App() {
         .admin-error-badge { background: rgba(231,76,60,0.15); border: 1px solid #e74c3c; color: #ff7675; padding: 8px 12px; border-radius: 4px; font-size: 0.78rem; margin-bottom: 16px; }
 
         /* ==========================================
-           SIDEBAR & LAYOUT ADMIN
+           RESTAURADO: SIDEBAR Y PANEL ADMIN EN MODO OSCURO
            ========================================== */
-        .admin-layout { display: flex; min-height: 100vh; background: #0c0c0e; }
+        .admin-layout {
+          display: flex;
+          min-height: 100vh;
+          background: #0c0c0e;
+          color: #e0e0e0;
+        }
         .admin-sidebar {
-          width: 270px;
+          width: 260px;
           background: #121215;
           border-right: 1px solid rgba(255, 255, 255, 0.08);
           display: flex;
@@ -1771,40 +2094,244 @@ export default function App() {
           top: 0;
           height: 100vh;
           flex-shrink: 0;
-          padding: 25px 18px;
+          padding: 22px 16px;
         }
-        .sidebar-header { display: flex; align-items: center; gap: 12px; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.06); }
-        .sidebar-nav { display: flex; flex-direction: column; gap: 8px; flex: 1; }
-        .sidebar-btn {
+        .sidebar-header {
           display: flex;
           align-items: center;
           gap: 12px;
+          margin-bottom: 25px;
+          padding: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 6px;
+          background: #16161a;
+        }
+        .sidebar-nav {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+          flex: 1;
+        }
+        .sidebar-btn {
+          display: flex;
+          align-items: center;
           background: transparent;
           border: none;
           color: #a1a1aa;
-          padding: 12px 14px;
+          padding: 11px 14px;
           border-radius: 6px;
           font-family: var(--font-body);
-          font-size: 0.84rem;
+          font-size: 0.85rem;
           font-weight: 500;
           text-align: left;
           cursor: pointer;
           transition: all 0.2s ease;
         }
-        .sidebar-btn:hover { background: rgba(255, 255, 255, 0.05); color: #fff; }
-        .sidebar-btn.activo { background: rgba(212, 175, 55, 0.15); color: #d4af37; font-weight: 600; border-left: 3px solid #d4af37; }
-        .sidebar-icon { font-size: 1.15rem; }
-        .sidebar-footer { border-top: 1px solid rgba(255, 255, 255, 0.06); padding-top: 18px; display: flex; flex-direction: column; gap: 8px; }
-        .sidebar-link-btn { background: transparent; border: 1px solid #333; color: #ccc; padding: 9px; border-radius: 4px; font-size: 0.78rem; cursor: pointer; text-align: center; }
-        .sidebar-logout-btn { background: rgba(231,76,60,0.1); border: 1px solid rgba(231,76,60,0.4); color: #e74c3c; padding: 9px; border-radius: 4px; font-size: 0.78rem; cursor: pointer; text-align: center; font-weight: 600; }
-        .sidebar-logout-btn:hover { background: #e74c3c; color: #fff; }
+        .sidebar-btn:hover {
+          background: rgba(255, 255, 255, 0.05);
+          color: #ffffff;
+        }
+        .sidebar-btn.activo {
+          background: rgba(212, 175, 55, 0.15);
+          color: #d4af37;
+          font-weight: 600;
+          border-left: 3px solid #d4af37;
+        }
+        .btn-sidebar-validar {
+          border: 1px solid rgba(212, 175, 55, 0.35) !important;
+          border-radius: 6px !important;
+          color: #d4af37 !important;
+          font-weight: 600 !important;
+        }
+        .btn-sidebar-validar.activo {
+          background: rgba(212, 175, 55, 0.2) !important;
+          border-color: #d4af37 !important;
+        }
+        .sidebar-footer {
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+          padding-top: 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .sidebar-link-btn {
+          background: transparent;
+          border: 1px solid #333338;
+          color: #cccccc;
+          padding: 9px;
+          border-radius: 6px;
+          font-size: 0.82rem;
+          cursor: pointer;
+          text-align: center;
+        }
+        .sidebar-link-btn:hover {
+          background: rgba(255, 255, 255, 0.05);
+          color: #ffffff;
+        }
+        .sidebar-logout-btn {
+          background: rgba(231, 76, 60, 0.12);
+          border: 1px solid rgba(231, 76, 60, 0.4);
+          color: #e74c3c;
+          padding: 9px;
+          border-radius: 6px;
+          font-size: 0.82rem;
+          cursor: pointer;
+          text-align: center;
+          font-weight: 700;
+        }
+        .sidebar-logout-btn:hover {
+          background: #e74c3c;
+          color: #ffffff;
+        }
 
-        .admin-main-content { flex: 1; padding: 35px 45px; overflow-y: auto; background: #0c0c0e; }
-        .admin-topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; }
+        .admin-main-content {
+          flex: 1;
+          padding: 40px 50px;
+          overflow-y: auto;
+          background: #0c0c0e;
+        }
+        .admin-topbar {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 25px;
+          flex-wrap: wrap;
+          gap: 15px;
+        }
 
         /* ==========================================
-           TABLA CRUD & ESTILOS ACCIONES
+           VALIDAR PAGOS (MODO OSCURO COHERENTE)
            ========================================== */
+        .seccion-validar-pagos-view {
+          width: 100%;
+          max-width: 1100px;
+        }
+        .validar-pagos-header-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: flex-start;
+          margin-bottom: 25px;
+        }
+        .subtitle-garantia-italica {
+          font-family: 'Great Vibes', cursive;
+          font-size: 1.6rem;
+          color: #d4af37;
+          display: block;
+          margin-bottom: 2px;
+        }
+        .title-validacion-pagos {
+          font-family: 'Cinzel', serif;
+          font-size: 1.85rem;
+          font-weight: 700;
+          color: #ffffff;
+          margin: 0 0 6px;
+          letter-spacing: 1px;
+        }
+        .desc-validacion-pagos {
+          font-size: 0.85rem;
+          color: #a0a0a0;
+          margin: 0;
+        }
+
+        .filtro-mostrar-dropdown {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
+        }
+        .filtro-mostrar-dropdown label {
+          font-size: 0.72rem;
+          color: #d4af37;
+          font-weight: 700;
+          margin-bottom: 6px;
+        }
+        .filtro-mostrar-dropdown select {
+          border: 1px solid #333;
+          border-radius: 6px;
+          padding: 8px 14px;
+          font-size: 0.85rem;
+          color: #ffffff;
+          background: #141416;
+          outline: none;
+        }
+
+        .tabla-validar-container {
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 8px;
+          overflow: hidden;
+          background: #141416;
+        }
+        .tabla-validar-pagos {
+          width: 100%;
+          border-collapse: collapse;
+          text-align: left;
+          font-size: 0.85rem;
+        }
+        .tabla-validar-pagos th {
+          background: #1a1a1f;
+          color: #d4af37;
+          padding: 14px 18px;
+          border-bottom: 1px solid #2a2a2e;
+          font-weight: 700;
+          font-size: 0.75rem;
+          letter-spacing: 0.5px;
+          font-family: var(--font-heading);
+        }
+        .tabla-validar-pagos td {
+          padding: 16px 18px;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+          color: #e0e0e0;
+          vertical-align: middle;
+        }
+        .nombre-cliente-td {
+          display: block;
+          font-weight: 700;
+          color: #ffffff;
+          margin-bottom: 2px;
+        }
+        .correo-cliente-td {
+          display: block;
+          font-size: 0.78rem;
+          color: #888888;
+        }
+        .pill-mesa-gris {
+          background: #1c1c20;
+          border: 1px solid rgba(212, 175, 55, 0.25);
+          border-radius: 6px;
+          padding: 6px 16px;
+          font-size: 0.82rem;
+          font-weight: 600;
+          color: #d4af37;
+          display: inline-block;
+        }
+        .pill-estado-validacion {
+          background: rgba(241, 196, 15, 0.15);
+          border: 1px solid rgba(241, 196, 15, 0.35);
+          border-radius: 20px;
+          padding: 6px 14px;
+          font-size: 0.68rem;
+          font-weight: 700;
+          letter-spacing: 0.5px;
+          color: #f1c40f;
+          display: inline-block;
+        }
+        .btn-revisar-comprobante {
+          background: #232328;
+          border: 1px solid #44444a;
+          border-radius: 6px;
+          padding: 8px 14px;
+          font-size: 0.78rem;
+          font-weight: 500;
+          color: #ffffff;
+          cursor: pointer;
+          transition: background 0.2s, border-color 0.2s;
+        }
+        .btn-revisar-comprobante:hover {
+          background: #d4af37;
+          color: #000000;
+          border-color: #d4af37;
+        }
+
+        /* Tabla CRUD */
         .tabla-crud { width: 100%; border-collapse: collapse; text-align: left; font-size: 0.83rem; }
         .tabla-crud th { background: #17171b; color: #d4af37; padding: 14px 16px; border-bottom: 1px solid #2a2a2e; font-family: var(--font-heading); font-size: 0.75rem; letter-spacing: 1px; }
         .tabla-crud td { padding: 14px 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); color: #e0e0e0; vertical-align: middle; }
@@ -1812,6 +2339,7 @@ export default function App() {
         .badge-mesa { background: rgba(212, 175, 55, 0.15); color: #d4af37; border: 1px solid rgba(212, 175, 55, 0.3); padding: 4px 10px; border-radius: 4px; font-weight: 600; font-size: 0.75rem; }
         .badge-estado { padding: 4px 9px; border-radius: 4px; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; }
         .badge-estado.confirmada { background: rgba(46, 204, 113, 0.15); color: #2ecc71; border: 1px solid rgba(46, 204, 113, 0.3); }
+        .badge-estado.pendiente-de-validación { background: rgba(241, 196, 15, 0.15); color: #f1c40f; border: 1px solid rgba(241, 196, 15, 0.3); }
         .badge-estado.en-mesa { background: rgba(52, 152, 219, 0.15); color: #3498db; border: 1px solid rgba(52, 152, 219, 0.3); }
         .badge-estado.cancelada { background: rgba(231, 76, 60, 0.15); color: #e74c3c; border: 1px solid rgba(231, 76, 60, 0.3); }
         .btn-accion-edit { background: #2a2a30; border: 1px solid #444; color: #fff; padding: 6px 10px; border-radius: 4px; font-size: 0.72rem; cursor: pointer; }
@@ -1829,43 +2357,13 @@ export default function App() {
         .kpi-bar-fill { height: 100%; background: #d4af37; border-radius: 3px; }
         .kpi-subtext { font-size: 0.75rem; color: #a1a1aa; }
 
-        /* Salón de 9 Mesas Grid */
         .grid-mesas-dashboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
         .mesa-box-card { padding: 18px; border-radius: 6px; border: 1px solid #2a2a2e; background: #18181c; }
         .mesa-libre-box { border-left: 4px solid #2ecc71; }
         .mesa-ocupada-box { border-left: 4px solid #e67e22; background: #1c1815; }
-        .mesa-bloqueada-box { border-left: 4px solid #e74c3c; background: #231616; border-color: rgba(231,76,60,0.3); }
+        .mesa-bloqueada-box { border-left: 4px solid #e74c3c; background: #231616; }
 
-        /* Grilla pública 9 mesas */
-        .mesas-grid-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 6px; }
-        .mesa-chip { padding: 9px 10px; font-size: 0.75rem; border-radius: 4px; border: 1px solid #c8b9a6; background: #ebe4d8; color: #3b322c; cursor: pointer; font-weight: 600; }
-        .mesa-chip.seleccionada { background: #8c4a27; color: #fff; border-color: #8c4a27; }
-        .mesa-chip.ocupada { background: #e0d9cf; color: #9e9389; border-color: #d5cdc2; cursor: not-allowed; text-decoration: line-through; }
-
-        /* Formulario Reserva */
-        .reserva-split-card { display: grid; grid-template-columns: 5fr 7fr; border-radius: 10px; overflow: hidden; border: 1px solid rgba(212, 175, 55, 0.25); background-color: #f4efe6; color: #2b2623; box-shadow: 0 20px 50px rgba(0,0,0,0.6); }
-        .reserva-img-col { background: url('https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1000&q=80') center/cover no-repeat; position: relative; min-height: 560px; }
-        .reserva-img-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(10,10,10,0.35), rgba(10,10,10,0.85)); padding: 35px; display: flex; flex-direction: column; justify-content: space-between; color: #fff; }
-        .reserva-tag { font-size: 0.7rem; letter-spacing: 2px; color: var(--gold-light); display: block; margin-bottom: 8px; }
-        .reserva-hero-title { font-family: 'Cormorant Garamond', serif; font-size: 2.6rem; font-weight: 400; line-height: 1.05; margin-bottom: 10px; color: #fff; }
-        .reserva-hero-sub { font-size: 0.85rem; color: #e0dcd5; max-width: 320px; }
-        .reserva-form-col { padding: 45px 50px; background-color: #f5f0e6; color: #2c2520; }
-        .form-small-title { font-size: 0.7rem; letter-spacing: 2px; color: #7a6a58; display: block; margin-bottom: 4px; }
-        .form-main-title { font-family: 'Cormorant Garamond', serif; font-size: 2.4rem; font-weight: 600; color: #1f1a17; margin-bottom: 6px; }
-        .form-subtitle { font-size: 0.85rem; color: #6e6259; margin-bottom: 25px; }
-        .inka-form label { display: block; font-size: 0.72rem; font-weight: 600; color: #4a3f35; margin-bottom: 6px; }
-        .inka-form input, .inka-form select { width: 100%; padding: 10px 4px; background: transparent; border: none; border-bottom: 1px solid #cfc6b8; color: #1f1a17; font-family: var(--font-body); font-size: 0.88rem; outline: none; }
-        .form-row-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 20px; }
-        .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 18px; }
-        .checkbox-label { display: flex !important; align-items: center; gap: 8px; margin: 18px 0; cursor: pointer; }
-        .btn-submit-reserva { width: 100%; background-color: #8c4a27; color: #fff; display: flex; justify-content: space-between; align-items: center; padding: 13px 20px; border-radius: 4px; margin-bottom: 14px; }
-        .btn-submit-reserva:hover { background-color: #6e381c; }
-        .form-footer-notes { display: flex; justify-content: space-between; font-size: 0.72rem; color: #7a6a58; }
-        .alerta-reserva { padding: 12px 15px; border-radius: 4px; font-size: 0.82rem; margin-bottom: 20px; }
-        .alerta-reserva.exito { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .alerta-reserva.error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-
-        /* Calendario Matriz */
+        /* Calendario */
         .calendario-wrapper { overflow-x: auto; padding: 20px; }
         .calendario-tabla { width: 100%; border-collapse: collapse; min-width: 850px; }
         .calendario-tabla th, .calendario-tabla td { border: 1px solid rgba(255,255,255,0.08); padding: 12px; text-align: center; font-size: 0.82rem; }
@@ -1873,8 +2371,6 @@ export default function App() {
         .hora-celda { font-weight: 600; color: var(--gold-light); background: #181818; }
         .celda-libre { color: #2ecc71; background: rgba(46, 204, 113, 0.05); }
         .celda-ocupada { background: rgba(212, 175, 55, 0.18); color: #fff; border: 1px solid var(--primary-gold); }
-        .celda-ocupada strong { display: block; color: var(--primary-gold); }
-        .celda-ocupada small { font-size: 0.72rem; color: #ccc; }
         .celda-bloqueada { background: rgba(231, 76, 60, 0.15); border: 1px solid rgba(231, 76, 60, 0.4); }
 
         /* Modal CRUD */
@@ -1898,7 +2394,7 @@ export default function App() {
 
         @media (max-width: 992px) {
           .admin-sidebar { width: 75px; padding: 15px 6px; }
-          .sidebar-header div, .sidebar-btn span:last-child, .sidebar-footer { display: none; }
+          .sidebar-header div, .sidebar-btn span, .sidebar-footer { display: none; }
           .sidebar-btn { justify-content: center; padding: 12px; }
           .admin-main-content { padding: 25px 20px; }
           .grid-3 { grid-template-columns: repeat(2, 1fr); }
@@ -1912,12 +2408,12 @@ export default function App() {
           .menu-toggle { display: flex; }
           .nav-links { position: fixed; top: 80px; left: -100%; width: 100%; height: calc(100vh - 80px); background-color: rgba(10, 10, 10, 0.98); flex-direction: column; align-items: center; justify-content: center; gap: 25px; transition: left 0.4s ease; }
           .nav-links.active { left: 0; }
-          .grid-3, .grid-2, .grid-2-about, .form-row-3, .form-row-2, .mesas-grid-selector, .grid-mesas-dashboard { grid-template-columns: 1fr; }
+          .grid-3, .grid-2, .grid-2-about, .form-row-3, .form-row-2, .mesas-grid-selector, .grid-mesas-dashboard, .pago-grid-cuentas, .pago-form-row { grid-template-columns: 1fr; }
           .reserva-form-col { padding: 30px 20px; }
         }
       `}</style>
 
-      {/* Navbar público (oculto en panel de administración) */}
+      {/* Navbar público */}
       {!(vistaActual === "admin" && adminAutenticado) && !(vistaActual === "admin" && !adminAutenticado) && (
         <Navbar
           vistaActual={vistaActual}
@@ -1927,7 +2423,7 @@ export default function App() {
         />
       )}
 
-      {/* RENDERIZADO CONDICIONAL DE VISTAS */}
+      {/* VISTAS */}
       {vistaActual === "contacto" ? (
         <PaginaContacto onVolverInicio={() => setVistaActual("cliente")} />
       ) : vistaActual === "admin" ? (
