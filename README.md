@@ -79,8 +79,23 @@ inka-sabores-restaurante/
 ├── package.json            # Dependencias y scripts de ejecución
 ├── vite.config.js          # Configuración del bundler Vite
 ├── src/
-│   ├── main.jsx            # Inicialización del DOM de React
-│   └── App.jsx             # Componente raíz con la lógica reactiva, vistas y estilos
+│   ├── data/constantes.js
+|   ├── components/
+│     ├── Navbar.jsx
+│     ├── Footer.jsx
+│     ├── PlatoCard.jsx
+│     ├── ModalPagoGarantia.jsx
+│     └── SeccionReserva.jsx
+|   ├── pages/
+│     ├── VistaCliente.jsx
+│     ├── LoginAdmin.jsx
+│     ├── PanelAdministrador.jsx
+│     └── PaginaContacto.jsx
+├── App.jsx
+├── App.css
+├── index.css
+└── main.jsx
+│ 
 └── README.md               # Documentación técnica y guía de instalación
 ```
 
@@ -98,4 +113,3 @@ inka-sabores-restaurante/
   ```bash
   npm run preview
   ```
-
