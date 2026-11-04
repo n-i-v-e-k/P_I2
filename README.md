@@ -98,18 +98,3 @@ inka-sabores-restaurante/
 │ 
 └── README.md               # Documentación técnica y guía de instalación
 ```
-
----
-
-# 🛠️ Comandos Adicionales
-
-* **Compilar para Producción:**
-  ```bash
-  npm run build
-  ```
-  Genera el directorio optimizado `dist/` listo para desplegar en servicios como Vercel, Netlify o GitHub Pages.
-
-* **Previsualizar la Versión de Producción Localmente:**
-  ```bash
-  npm run preview
-  ```
