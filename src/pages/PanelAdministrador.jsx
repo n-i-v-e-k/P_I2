@@ -22,7 +22,7 @@ export default function PanelAdministrador({
   const [modoEdicion, setModoEdicion] = useState(false);
   const [idReservaEdicion, setIdReservaEdicion] = useState(null);
 
-  const [filtroMostrarPagos, setFiltroMostrarPagos] = useState("Pendientes de validación");
+  const [filtroMostrarPagos, setFiltroMostrarPagos] = useState("Pendiente de validación");
   const [reservaParaRevisar, setReservaParaRevisar] = useState(null);
 
   const [formData, setFormData] = useState({
@@ -179,7 +179,7 @@ export default function PanelAdministrador({
           </div>
           <div>
             <h4 style={{ color: "#d4af37", fontSize: "0.95rem", margin: 0 }}>Inka Sabores</h4>
-            <small style={{ color: "#777", fontSize: "0.7rem" }}>9 Mesas · Salón Central</small>
+            <small style={{ color: "#b5b5bb", fontSize: "0.7rem" }}>9 Mesas · Salón Central</small>
           </div>
         </div>
 
@@ -248,7 +248,7 @@ export default function PanelAdministrador({
                   value={filtroMostrarPagos}
                   onChange={(e) => setFiltroMostrarPagos(e.target.value)}
                 >
-                  <option value="Pendientes de validación">Pendientes de validación</option>
+                  <option value="Pendiente de validación">Pendientes de validación</option>
                   <option value="Confirmada">Confirmadas</option>
                   <option value="Todos">Todos</option>
                 </select>
@@ -270,7 +270,7 @@ export default function PanelAdministrador({
                 <tbody>
                   {reservasParaValidar.length === 0 ? (
                     <tr>
-                      <td colSpan="6" style={{ textAlign: "center", padding: "40px", color: "#888" }}>
+                      <td colSpan="6" style={{ textAlign: "center", padding: "40px", color: "#c9c9cf" }}>
                         No hay reservas en estado "{filtroMostrarPagos}".
                       </td>
                     </tr>
@@ -290,7 +290,7 @@ export default function PanelAdministrador({
                         </td>
                         <td>
                           <span>S/ {r.montoGarantia || 100}· {r.medioPago || "Yape"}</span>
-                          <span style={{ display: "block", color: "#888", fontSize: "0.75rem" }}>
+                          <span style={{ display: "block", color: "#c9c9cf", fontSize: "0.75rem" }}>
                             Op. {r.nroOperacion || "04587123"}
                           </span>
                         </td>
@@ -323,7 +323,7 @@ export default function PanelAdministrador({
                 <h3 style={{ margin: 0, fontSize: "1.2rem", fontWeight: 700, color: "#d4af37" }}>
                   Comprobante de Pago — {reservaParaRevisar.nombre}
                 </h3>
-                <button onClick={() => setReservaParaRevisar(null)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "#888" }}>✕</button>
+                <button onClick={() => setReservaParaRevisar(null)} style={{ background: "none", border: "none", fontSize: "1.2rem", cursor: "pointer", color: "#c9c9cf" }}>✕</button>
               </div>
 
               <div style={{ background: "#1c1c20", padding: "14px", borderRadius: "6px", marginBottom: "15px", fontSize: "0.85rem", color: "#e0e0e0" }}>
@@ -334,7 +334,7 @@ export default function PanelAdministrador({
               </div>
 
               <div style={{ border: "1px solid rgba(255,255,255,0.1)", borderRadius: "6px", padding: "15px", textAlign: "center", background: "#16161a", marginBottom: "20px" }}>
-                <span style={{ display: "block", fontSize: "0.75rem", color: "#888", marginBottom: "8px" }}>Vista del Voucher adjuntado por el comensal:</span>
+                <span style={{ display: "block", fontSize: "0.75rem", color: "#c9c9cf", marginBottom: "8px" }}>Vista del Voucher adjuntado por el comensal:</span>
                 <div style={{ width: "100%", height: "160px", background: "#0c0c0e", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "4px", border: "1px dashed rgba(212,175,55,0.3)", color: "#d4af37", fontSize: "0.85rem" }}>
                   🧾 Voucher Yape/BCP verificado (Op. {reservaParaRevisar.nroOperacion || "04587123"})
                 </div>
@@ -372,7 +372,7 @@ export default function PanelAdministrador({
               <div>
                 <span className="subtitle-cursive" style={{ fontSize: "1.3rem" }}>Módulo de Control</span>
                 <h2 style={{ color: "#d4af37", fontSize: "1.8rem" }}>Operaciones y Reservas</h2>
-                <p style={{ color: "#888", fontSize: "0.85rem" }}>
+                <p style={{ color: "#c9c9cf", fontSize: "0.85rem" }}>
                   Crear, actualizar estados y eliminar reservas de las 9 mesas del restaurante.
                 </p>
               </div>
@@ -430,7 +430,7 @@ export default function PanelAdministrador({
                 <tbody>
                   {reservasFiltradasOperaciones.length === 0 ? (
                     <tr>
-                      <td colSpan="6" style={{ textAlign: "center", padding: "35px", color: "#777" }}>
+                      <td colSpan="6" style={{ textAlign: "center", padding: "35px", color: "#b5b5bb" }}>
                         No se encontraron reservas con los filtros aplicados.
                       </td>
                     </tr>
@@ -439,18 +439,18 @@ export default function PanelAdministrador({
                       <tr key={r.id}>
                         <td>
                           <strong>{r.nombre}</strong>
-                          <small style={{ display: "block", color: "#aaa" }}>📞 {r.telefono}</small>
+                          <small style={{ display: "block", color: "#d0d0d5" }}>📞 {r.telefono}</small>
                           {r.notas && <small style={{ display: "block", color: "#f3e5ab" }}>"{r.notas}"</small>}
                         </td>
                         <td>{r.fecha} <br /> <span style={{ color: "#d4af37" }}>{r.hora} hrs</span></td>
                         <td>
                           <span className="badge-mesa">{r.mesa}</span>
-                          <small style={{ display: "block", color: "#777", marginTop: "2px" }}>{r.personas}</small>
+                          <small style={{ display: "block", color: "#b5b5bb", marginTop: "2px" }}>{r.personas}</small>
                         </td>
                         <td>
                           <strong style={{ color: "#2ecc71" }}>S/ {r.montoGarantia || 100}</strong>
                           <small style={{ display: "block", color: "#d4af37" }}>{r.medioPago || "Yape"}</small>
-                          <small style={{ color: "#888" }}>Op: {r.nroOperacion || "---"}</small>
+                          <small style={{ color: "#c9c9cf" }}>Op: {r.nroOperacion || "---"}</small>
                         </td>
                         <td>
                           <span className={`badge-estado ${r.estado ? r.estado.toLowerCase().replace(/ /g, "-") : "confirmada"}`}>
@@ -494,7 +494,7 @@ export default function PanelAdministrador({
               <div>
                 <span className="subtitle-cursive" style={{ fontSize: "1.3rem" }}>Gestión de Salón</span>
                 <h2 style={{ color: "#d4af37", fontSize: "1.8rem" }}>Control de Incidentes & Bloqueo de Mesas</h2>
-                <p style={{ color: "#888", fontSize: "0.85rem" }}>
+                <p style={{ color: "#c9c9cf", fontSize: "0.85rem" }}>
                   Inhabilita o rehabilita una mesa completa por todo el día debido a incidentes.
                 </p>
               </div>
@@ -548,7 +548,7 @@ export default function PanelAdministrador({
                     ) : (
                       <div style={{ marginBottom: "15px" }}>
                         <small style={{ color: "#2ecc71", display: "block" }}>Disponible para reservas.</small>
-                        <small style={{ color: "#888" }}>{reservasAfectadas.length} reservas registradas hoy.</small>
+                        <small style={{ color: "#c9c9cf" }}>{reservasAfectadas.length} reservas registradas hoy.</small>
                       </div>
                     )}
 
@@ -580,7 +580,7 @@ export default function PanelAdministrador({
               <div>
                 <span className="subtitle-cursive" style={{ fontSize: "1.3rem" }}>Métricas Ejecutivas</span>
                 <h2 style={{ color: "#d4af37", fontSize: "1.8rem" }}>Dashboard de Salón</h2>
-                <p style={{ color: "#888", fontSize: "0.85rem" }}>
+                <p style={{ color: "#c9c9cf", fontSize: "0.85rem" }}>
                   Análisis de ocupación, comensales proyectados e ingresos por garantía (S/ 100).
                 </p>
               </div>
@@ -655,10 +655,10 @@ export default function PanelAdministrador({
                         <div>
                           <small style={{ color: "#d4af37" }}>{reservaActiva.hora} hrs</small><br />
                           <small style={{ color: "#fff" }}>{reservaActiva.nombre}</small><br />
-                          <small style={{ color: "#aaa" }}>{reservaActiva.personas}</small>
+                          <small style={{ color: "#d0d0d5" }}>{reservaActiva.personas}</small>
                         </div>
                       ) : (
-                        <small style={{ color: "#888" }}>Disponible</small>
+                        <small style={{ color: "#c9c9cf" }}>Disponible</small>
                       )}
                     </div>
                   );
@@ -674,7 +674,7 @@ export default function PanelAdministrador({
               <div>
                 <span className="subtitle-cursive" style={{ fontSize: "1.3rem" }}>Ocupación de Espacios</span>
                 <h2 style={{ color: "#d4af37", fontSize: "1.8rem" }}>Matriz de Salón (9 Mesas)</h2>
-                <p style={{ color: "#888", fontSize: "0.85rem" }}>
+                <p style={{ color: "#c9c9cf", fontSize: "0.85rem" }}>
                   Revisa qué mesas y turnos están libres, ocupados o fuera de servicio.
                 </p>
               </div>
@@ -719,7 +719,7 @@ export default function PanelAdministrador({
                           return (
                             <td key={mesa} className="celda-bloqueada" title={bloqueo.motivo}>
                               <strong style={{ color: "#ff7675" }}>⛔ Fuera de servicio</strong>
-                              <small style={{ color: "#aaa", display: "block" }}>Incidente</small>
+                              <small style={{ color: "#d0d0d5", display: "block" }}>Incidente</small>
                             </td>
                           );
                         }
@@ -732,7 +732,9 @@ export default function PanelAdministrador({
                             {reservaEncontrada ? (
                               <div>
                                 <strong>{reservaEncontrada.nombre}</strong>
-                                <small>{reservaEncontrada.personas}</small>
+                                <small style={{ display: "block", marginTop: "2px", color: "#f3e5ab" }}>
+                                  {reservaEncontrada.personas}
+                                </small>
                               </div>
                             ) : (
                               <span>Disponible</span>
@@ -756,7 +758,7 @@ export default function PanelAdministrador({
               <h3 style={{ color: "#d4af37", margin: 0, fontFamily: "'Cinzel', serif" }}>
                 {modoEdicion ? "✏️ Modificar Reserva (Update)" : "+ Registrar Reserva (Create)"}
               </h3>
-              <button onClick={() => setModalAbierto(false)} style={{ background: "none", border: "none", color: "#888", fontSize: "1.3rem", cursor: "pointer" }}>✕</button>
+              <button onClick={() => setModalAbierto(false)} style={{ background: "none", border: "none", color: "#c9c9cf", fontSize: "1.3rem", cursor: "pointer" }}>✕</button>
             </div>
 
             <form onSubmit={manejarGuardar}>
@@ -874,10 +876,10 @@ export default function PanelAdministrador({
               <h3 style={{ color: "#e74c3c", margin: 0, fontSize: "1.2rem" }}>
                 ⛔ Reportar Incidente y Cancelar Mesa
               </h3>
-              <button onClick={() => setModalBloqueoAbierto(false)} style={{ background: "none", border: "none", color: "#888", fontSize: "1.2rem", cursor: "pointer" }}>✕</button>
+              <button onClick={() => setModalBloqueoAbierto(false)} style={{ background: "none", border: "none", color: "#c9c9cf", fontSize: "1.2rem", cursor: "pointer" }}>✕</button>
             </div>
 
-            <p style={{ color: "#aaa", fontSize: "0.82rem", marginBottom: "20px" }}>
+            <p style={{ color: "#d0d0d5", fontSize: "0.82rem", marginBottom: "20px" }}>
               Al bloquear la <strong>{mesaParaBloquear}</strong> para el <strong>{fechaFiltro}</strong>, quedará fuera de servicio para todo el día y ningún cliente podrá seleccionarla.
             </p>
 
